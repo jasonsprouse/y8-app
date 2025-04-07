@@ -1,0 +1,30 @@
+{
+  "name": "y8-app",
+  "version": "0.0.1",
+  "description": "y8 app",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jason Sprouse",
+  "license": "ISC",
+  "dependencies": {
+    "ethers": "^6.13.5",
+    "next": "^15.2.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "volta": {
+    "node": "18.18.0",
+    "npm": "10.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.14.0",
+    "@types/react": "19.1.0",
+    "typescript": "5.8.3"
+  }
+}

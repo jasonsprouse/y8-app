@@ -1,0 +1,120 @@
+.container {
+    /* Make container full width */
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    /* Remove gap and add other styling to match HTML example */
+    gap: 30px; 
+    margin: 0;
+    overflow: visible;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+/* Media query for small screens */
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.card {
+    padding: 40px 20px;
+    text-align: center;
+    border-radius: 2px; /* Add border radius for cleaner look */
+    color: white;
+    font-size: 1.75rem;
+    font-weight: bold;
+    min-height: 250px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Improved hover effects */
+.card:hover {
+    transform: translateY(-5px) scale(1.01);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    z-index: 5;
+    animation: subtle-pulse 2s infinite ease-in-out;
+}
+
+.card:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.card:hover:before {
+    opacity: 1;
+}
+
+/* Update colors with gradients to match example */
+.space { 
+    background-color: #4285F4;
+    background-image: linear-gradient(135deg, #4285F4, #3367d6);
+}
+
+.food { 
+    background-color: #996633;
+    background-image: linear-gradient(135deg, #996633, #7e5425);
+}
+
+.energy { 
+    background-color: #34A853;
+    background-image: linear-gradient(135deg, #34A853, #2d8745);
+}
+
+.health { 
+    background-color: #E91E63;
+    background-image: linear-gradient(135deg, #E91E63, #c2185b);
+}
+
+/* Style for the link wrapper */
+.linkWrapper {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Enhanced underline animation */
+.card:after {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 2px;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.7);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.linkWrapper:hover .card:after {
+    width: 80px;
+    height: 3px;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Add subtle pulse effect to card on hover */
+@keyframes subtle-pulse {
+    0% { box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
+    50% { box-shadow: 0 15px 35px rgba(0,0,0,0.25); }
+    100% { box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
+}

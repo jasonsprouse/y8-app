@@ -1,0 +1,54 @@
+# Dependencies
+/node_modules
+package-lock.json
+yarn.lock
+.pnp
+.pnp.js
+
+# Testing
+coverage
+
+# Production
+/build
+/dist
+/artifacts
+/cache
+
+# Ethereum & Hardhat
+/artifacts
+/cache
+/deployments/localhost
+typechain
+typechain-types
+
+# Solidity coverage
+coverage
+coverage.json
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+*.sublime*
+
+# Misc
+.DS_Store
+.turbo
+.vercel
+.next/

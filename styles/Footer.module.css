@@ -1,0 +1,7 @@
+.footer {
+    background-color: #343a40; /* Dark background */
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin-top: auto; /* Pushes footer to bottom if content is short */
+  }

@@ -1,0 +1,34 @@
+.header {
+    background-color: #f8f9fa; /* Light grey background */
+    padding-bottom: 0; /* Navbar will have its own styling */
+    border-bottom: 1px solid #dee2e6; /* Separator line */
+  }
+  
+  .topSection {
+      display: flex;
+      justify-content: center; /* Center logo/title */
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+      /* Add background if needed, like the green gradient in the image */
+      /* background: linear-gradient(to bottom, #a8e063, #56ab2f); */
+      /* color: white; */
+  }
+  
+  .logoLink {
+    /* Styles for the logo area link */
+    color: #007bff; /* Blue color */
+  }
+  
+  .title {
+    margin: 0 0 5px 0;
+    font-size: 2.5rem;
+  }
+  
+  .tagline {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #6c757d; /* Grey color for tagline */
+  }
+  
+  /* Add styles for connect button if you place it here */

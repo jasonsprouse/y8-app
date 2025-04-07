@@ -1,0 +1,131 @@
+.walletContainer {
+  margin-bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.connectButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: rgb(23, 190, 25);
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+  width: auto;
+}
+
+.connectButton:hover {
+  background-color: rgb(30, 210, 33); /* Slightly lighter green instead of white */
+  box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Add a focus state for accessibility */
+.connectButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(23, 190, 25, 0.3), 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.connectButton img {
+  width: 18px;
+  height: 18px;
+}
+
+.walletInfo {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  padding: 15px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  color: #333;
+  min-width: 250px;
+  z-index: 1000;
+}
+
+.walletInfo > div {
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.walletInfo strong {
+  display: inline-block;
+  width: 100px;
+  color: #000;
+  font-weight: 600;
+}
+
+.walletAddress {
+  font-family: monospace;
+  padding: 2px 6px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  color: #333;
+}
+
+.authenticated {
+  color: #7ed321;
+  font-weight: bold;
+}
+
+.disconnected {
+  color: #d32121;
+}
+
+.pending {
+  color: #d3a521;
+}
+
+/* Status colors */
+.statusAuthenticated {
+  color: #7ed321;
+  font-weight: 600;
+}
+
+.statusConnected {
+  color: #4a90e2;
+  font-weight: 500;
+}
+
+.statusError {
+  color: #d32121;
+  font-weight: 500;
+}
+
+/* Add this if not already present */
+.ensName {
+  font-weight: 600;
+  color: #4a90e2;
+  margin-right: 6px;
+}
+
+/* Adjust wallet address style when ENS is present */
+.ensName + .walletAddress {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* Media query for small screens */
+@media screen and (max-width: 768px) {
+  .walletContainer {
+    justify-content: center;
+    width: auto;
+  }
+  
+  .walletInfo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+  }
+}

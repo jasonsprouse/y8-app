@@ -1,0 +1,31 @@
+.navbar {
+    background-color: #ffffff; /* White background for the nav */
+    padding: 10px 0;
+    border-top: 1px solid #e0e0e0; /* Line above nav if needed */
+    display: flex;
+    justify-content: center; /* Center the nav list */
+  }
+  
+  .navList {
+    display: flex;
+    gap: 30px; /* Space between nav items */
+  }
+  
+  .navItem a {
+    color: #333;
+    font-weight: 500;
+    padding: 8px 15px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .navItem a:hover {
+    background-color: #e9ecef; /* Light hover effect */
+    color: #000;
+  }
+  
+  /* Style for active link if using path checking */
+  /* .navItem a.active {
+    color: green;
+    border-bottom: 2px solid green;
+  } */
