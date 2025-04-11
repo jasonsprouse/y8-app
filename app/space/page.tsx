@@ -1,137 +1,240 @@
 "use client";
 
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
+import { motion } from 'framer-motion';
 import styles from '../../styles/Space.module.css';
 
 export default function SpaceServicesPage() {
   const { isAuthenticated } = useAuth();
+  const [activeService, setActiveService] = useState(0);
+  const [questionnaireStep, setQuestionnaireStep] = useState(0);
+  const [answers, setAnswers] = useState({
+    experience: '',
+    budget: '',
+    timeline: '',
+    healthStatus: '',
+    purpose: ''
+  });
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Service data for the bottom row buttons
+  const spaceServices = [
+    {
+      id: 'shield',
+      name: 'Space Shield Construction',
+      icon: '🛡️',
+      url: '/space/shield'
+    },
+    {
+      id: 'training',
+      name: 'Space Flight Training',
+      icon: '🧑‍🚀',
+      url: '/space/training'
+    },
+    {
+      id: 'burial',
+      name: 'Space Burial',
+      icon: '✨',
+      url: '/space/burial'
+    },
+    {
+      id: 'travel',
+      name: 'Space Flight Travel',
+      icon: '🚀',
+      url: '/space/travel'
+    },
+    {
+      id: 'orbit',
+      name: 'Low Earth Orbit Flight',
+      icon: '🛰️',
+      url: '/space/orbit'
+    },
+    {
+      id: 'balloon',
+      name: 'Balloon Liftoff',
+      icon: '🎈',
+      url: '/space/balloon'
+    }
+  ];
+
+  // Questionnaire steps
+  const questionnaireSteps = [
+    {
+      question: "What is your experience level with space or aviation?",
+      options: [
+        "No experience",
+        "Aviation enthusiast",
+        "Licensed pilot",
+        "Professional aviation career",
+        "Previous space training"
+      ],
+      field: "experience"
+    },
+    {
+      question: "What is your approximate budget for space services?",
+      options: [
+        "Under $50,000",
+        "$50,000 - $250,000",
+        "$250,000 - $1 million",
+        "$1 million - $5 million",
+        "Over $5 million"
+      ],
+      field: "budget"
+    },
+    {
+      question: "What is your preferred timeline for participation?",
+      options: [
+        "Within 6 months",
+        "6-12 months",
+        "1-2 years",
+        "2-5 years",
+        "More than 5 years"
+      ],
+      field: "timeline"
+    },
+    {
+      question: "How would you describe your current health status?",
+      options: [
+        "Excellent - No limitations",
+        "Good - Minor limitations",
+        "Average - Some limitations",
+        "Below average - Significant limitations",
+        "Prefer not to say"
+      ],
+      field: "healthStatus"
+    },
+    {
+      question: "What is your primary purpose for space services?",
+      options: [
+        "Personal experience",
+        "Professional development",
+        "Research opportunity",
+        "Memorial service",
+        "Other"
+      ],
+      field: "purpose"
+    }
+  ];
+
+  const handleQuestionnaireNext = () => {
+    if (questionnaireStep < questionnaireSteps.length - 1) {
+      setQuestionnaireStep(prev => prev + 1);
+    } else {
+      // Submit questionnaire - would typically send data to server
+      alert("Thank you for completing our questionnaire. A space consultant will contact you soon.");
+      setQuestionnaireStep(0);
+    }
+  };
+
+  const handleAnswerSelect = (field: string, value: string) => {
+    setAnswers(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  useEffect(() => {
+    // Optional: Start video when page loads
+    if (videoRef.current) {
+      videoRef.current.play().catch(error => {
+        console.log("Autoplay prevented. User must interact first.");
+      });
+    }
+  }, []);
 
   return (
     <div className={styles.container}>
-      {/* Hero Section */}
-      <section className={styles.hero}>
-        <div className={styles.heroContent}>
-          <h1>Space Services</h1>
-          <p>Premium space tourism, training, and end-of-life services</p>
+      {/* Row 1: Video Display with blank cells */}
+      <section className={styles.videoRow}>
+        <div className={styles.blankCell}></div>
+        <div className={styles.videoCell}>
+          <div className={styles.videoWrapper}>
+            <video 
+              ref={videoRef} 
+              className={styles.video}
+              controls
+              playsInline
+              loop
+              muted
+              poster="/images/space_video_poster.jpg"
+            >
+              <source src="/videos/space_experience.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            <div className={styles.videoOverlay}>
+              <h1>Y8 Space Services</h1>
+              <p>Unlock the universe with our premium space experiences</p>
+            </div>
+          </div>
         </div>
-        <Image 
-          src="/images/sky2.png" 
-          alt="Space horizon" 
-          width={1200} 
-          height={300} 
-          className={styles.heroImage}
-        />
+        <div className={styles.blankCell}></div>
       </section>
 
-      {/* Main Content */}
-      <section className={styles.content}>
-        <div className={styles.introduction}>
-          <h2>Explore Beyond Earth</h2>
-          <p>
-            Space tourism is now reaching commercial viability for civilian travel. From orbital flights to space training 
-            and memorial services, Y8 Consulting offers a Total Value Proposition (TVP) that encompasses various space 
-            services to inspire a greater understanding of the universe.
+      {/* Row 2: Qualifying Questionnaire */}
+      <section className={styles.questionnaireRow}>
+        <motion.div 
+          className={styles.questionnaireContainer}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+        >
+          <h2>Space Services Qualification</h2>
+          <p className={styles.questionnaireIntro}>
+            Complete this brief questionnaire to help us tailor our space services to your needs and preferences.
           </p>
-        </div>
 
-        {/* Services Grid */}
-        <div className={styles.servicesGrid}>
-          {/* Aurora Aerospace */}
-          <div className={styles.serviceCard}>
-            <div className={styles.serviceHeader}>
-              <h3>Aurora Aerospace</h3>
-              <p>Civilian Space Training</p>
-            </div>
-            <div className={styles.serviceContent}>
-              <Image 
-                src="/images/aurora_aerospace.jpg" 
-                alt="Aurora Aerospace" 
-                width={400} 
-                height={250} 
-                className={styles.serviceImage}
-              />
-              <p>The world's only civilian space training center offering both flight and ground-based training.</p>
-              <ul>
-                <li>L-39 Flight (60-min)</li>
-                <li>Zero-G Flight Experience</li>
-                <li>Hypoxia Training</li>
-                <li>Spacecraft/L-39 Simulator</li>
-                <li>Medical Certification</li>
-                <li>Complete Training Package</li>
-              </ul>
-              <Link href="#contact" className={styles.learnMore}>
-                Learn More
-              </Link>
-            </div>
-          </div>
-
-          {/* Virgin Galactic */}
-          <div className={styles.serviceCard}>
-            <div className={styles.serviceHeader}>
-              <h3>Virgin Galactic</h3>
-              <p>Suborbital Space Travel</p>
-            </div>
-            <div className={styles.serviceContent}>
-              <Image 
-                src="/images/spaceship_one.jpg" 
-                alt="Spaceship One" 
-                width={400} 
-                height={250} 
-                className={styles.serviceImage}
-              />
-              <p>
-                Experience suborbital space flight with Virgin Galactic. You'll accelerate to 3x the speed of sound, 
-                enjoy moments of weightlessness, and see Earth from a perspective few humans have witnessed.
-              </p>
-              <p className={styles.highlight}>Become a certified astronaut.</p>
-              <Link href="#contact" className={styles.learnMore}>
-                Book Consultation
-              </Link>
-            </div>
-          </div>
-
-          {/* Celestis */}
-          <div className={styles.serviceCard}>
-            <div className={styles.serviceHeader}>
-              <h3>Celestis Memorial Spaceflights</h3>
-              <p>Space Burial Services</p>
-            </div>
-            <div className={styles.serviceContent}>
-              <Image 
-                src="/images/headstone_burial.png" 
-                alt="Celestis Space Burial" 
-                width={400} 
-                height={250} 
-                className={styles.serviceImage}
-              />
-              <p>
-                Celestis is the pioneer and global leader in memorial spaceflights, having performed over 500 space 
-                burials since 1997.
-              </p>
-              <p>
-                At Y8 Consulting, we help you create a lasting legacy that will inspire your lineage for generations 
-                to come.
-              </p>
-              <div className={styles.spaceStationLink}>
-                <Link href="https://www.ustream.tv/channel/17074538" target="_blank" rel="noopener noreferrer">
-                  Watch the Space Station LIVE →
-                </Link>
+          <div className={styles.questionnaireCard}>
+            {questionnaireStep < questionnaireSteps.length ? (
+              <>
+                <div className={styles.questionProgress}>
+                  <div 
+                    className={styles.progressBar} 
+                    style={{ width: `${(questionnaireStep / (questionnaireSteps.length - 1)) * 100}%` }}
+                  ></div>
+                </div>
+                <h3>{questionnaireSteps[questionnaireStep].question}</h3>
+                <div className={styles.optionsGrid}>
+                  {questionnaireSteps[questionnaireStep].options.map((option, idx) => (
+                    <button 
+                      key={idx}
+                      className={`${styles.optionButton} ${answers[questionnaireSteps[questionnaireStep].field as keyof typeof answers] === option ? styles.optionSelected : ''}`}
+                      onClick={() => handleAnswerSelect(questionnaireSteps[questionnaireStep].field, option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  className={styles.nextButton}
+                  onClick={handleQuestionnaireNext}
+                  disabled={!answers[questionnaireSteps[questionnaireStep].field as keyof typeof answers]}
+                >
+                  {questionnaireStep === questionnaireSteps.length - 1 ? 'Submit' : 'Next'}
+                </button>
+              </>
+            ) : (
+              <div className={styles.thankYouMessage}>
+                <h3>Thank You!</h3>
+                <p>A space consultant will contact you shortly to discuss your options.</p>
               </div>
-            </div>
+            )}
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* Contact Section */}
-      <section id="contact" className={styles.contactSection}>
-        <h2>Ready to explore space?</h2>
-        <p>Contact our space services consultants to begin your journey</p>
-        <div className={styles.contactInfo}>
-          <a href="mailto:contact@y8design.us" className={styles.contactButton}>
-            Contact Us
-          </a>
+      {/* Row 3: Service Buttons */}
+      <section className={styles.serviceButtonsRow}>
+        <h2>Explore Our Space Services</h2>
+        <div className={styles.servicesGrid}>
+          {spaceServices.map((service) => (
+            <Link href={service.url} key={service.id} className={styles.serviceButton}>
+              <div className={styles.serviceIcon}>{service.icon}</div>
+              <span>{service.name}</span>
+            </Link>
+          ))}
         </div>
       </section>
     </div>
