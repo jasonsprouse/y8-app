@@ -23,10 +23,22 @@ export default function SpaceServicesPage() {
   // Service data for the bottom row buttons
   const spaceServices = [
     {
-      id: 'shield',
-      name: 'Space Shield Construction',
+      id: 'sunshade',
+      name: 'Space Sunshade Construction',
       icon: '🛡️',
-      url: '/space/shield'
+      url: '/space/sunshade'
+    },
+    {
+      id: 'elevator',
+      name: 'Space Elevator',
+      icon: '🚡',
+      url: '/space/elevator'
+    },
+    {
+      id: 'mining',
+      name: 'Space Astroid Mining',
+      icon: '⛏️',
+      url: '/space/mining'
     },
     {
       id: 'training',
