@@ -512,7 +512,7 @@ export default function SunshadeNFTMinter() {
         </button>
         </div>
       </motion.div>
-    </section>}
+    </section>
       {isAuthenticated && mintedNFTs.length > 0 && (
         <section className={styles.mintedNFTsSection}>
           <h2>Your Sunshade NFTs</h2>
