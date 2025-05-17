@@ -1,5 +1,5 @@
 import React from 'react';
-import WalletConnect from './WalletConnect'; // Import WalletConnect
+import WalletConnect from '../WalletConnect'; // Import WalletConnect
 
 const NotificationBar = () => {
   return (
@@ -29,7 +29,6 @@ const NotificationBar = () => {
             <h4>Welcome to Good Faith Paradigm - Innovating for Tomorrow</h4>
           </div>
           <div className="notification-wallet">
-            <WalletConnect />
           </div>
         </div>
       </div>

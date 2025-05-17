@@ -1,428 +1,261 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { BrowserProvider } from 'ethers';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { 
+  AuthMethod, 
+  IRelayPKP, 
+  SessionSigs 
+} from '@lit-protocol/types';
+import { litNodeClient, getSessionSigs, signInWithGoogle, signInWithDiscord } from '../utils/lit';
 
-// Define Ethereum provider interface for window.ethereum
-interface EthereumProvider {
-  isMetaMask?: boolean;
-  providers?: EthereumProvider[];
-  request: (args: { method: string; params?: any[] }) => Promise<any>;
-  on: (eventName: string, listener: (...args: any[]) => void) => void;
-  removeListener?: (eventName: string, listener: (...args: any[]) => void) => void;
-}
-
-// Extend Window interface
-declare global {
-  interface Window {
-    ethereum?: EthereumProvider;
-  }
-}
-
-// Define the shape of our auth context state
+// Define context type
 interface AuthContextType {
-  status: string;
-  address: string;
-  ensName: string | null;
   isAuthenticated: boolean;
-  isConnected: boolean;
-  userSignature: string | null;
-  connect: () => Promise<void>;
-  requestSignature: () => Promise<void>;
-  disconnect: () => void;
+  isLoading: boolean;
+  authMethod: AuthMethod | null;
+  pkp: IRelayPKP | null;
+  sessionSigs: SessionSigs | null;
+  error: Error | null;
+  
+  // Auth methods
+  loginWithGoogle: () => Promise<void>;
+  loginWithDiscord: () => Promise<void>;
+  loginWithWebAuthn: () => Promise<void>;
+  logOut: () => void;
+  setPKP: (pkp: IRelayPKP) => void;
+  setSessionSigs: (sessionSigs: SessionSigs) => void;
 }
 
-// Create the context with a default value
-const AuthContext = createContext<AuthContextType | null>(null);
+// Create context with default values
+const AuthContext = createContext<AuthContextType>({
+  isAuthenticated: false,
+  isLoading: true,
+  authMethod: null,
+  pkp: null,
+  sessionSigs: null,
+  error: null,
+  
+  loginWithGoogle: async () => {},
+  loginWithDiscord: async () => {},
+  loginWithWebAuthn: async () => {},
+  logOut: () => {},
+  setPKP: () => {},
+  setSessionSigs: () => {},
+});
 
-// Define props for the provider component
-interface AuthProviderProps {
-  children: ReactNode;
-}
+// Auth Provider component
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [authMethod, setAuthMethod] = useState<AuthMethod | null>(null);
+  const [pkp, setPKP] = useState<IRelayPKP | null>(null);
+  const [sessionSigs, setSessionSigs] = useState<SessionSigs | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  
+  const router = useRouter();
+  const pathname = usePathname();
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [status, setStatus] = useState("Disconnected");
-  const [address, setAddress] = useState("Not connected");
-  const [ensName, setEnsName] = useState<string | null>(null);
-  const [userSignature, setUserSignature] = useState<string | null>(null);
-  const [isMobileDevice, setIsMobileDevice] = useState(false);
-
-  // Create a unique signature message with timestamp
-  const signatureMessage = `Welcome to Y8!\n\nClick to sign in and authenticate with your wallet.\n\nThis request will not trigger a blockchain transaction or cost any gas fees.\n\nTimestamp: ${Date.now()}`;
-
-  // Simple cache for ENS names to reduce provider calls
-  const ensCache = new Map<string, string | null>();
-
-  // Check if device is mobile
-  const checkIfMobile = () => {
-    if (typeof navigator === 'undefined') return false;
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  };
-
-  // Check if MetaMask is installed
-  const isMetaMaskInstalled = () => {
-    if (typeof window === 'undefined') return false;
-    
-    const { ethereum } = window;
-    return Boolean(ethereum && 
-      (ethereum.isMetaMask || 
-       (ethereum.providers && 
-        ethereum.providers.some((p: any) => p.isMetaMask))));
-  };
-
-  // Get the correct provider
-  const getProvider = () => {
-    if (typeof window === 'undefined') return null;
-    
-    try {
-      const { ethereum } = window;
-      if (!ethereum) return null;
-      
-      // If there are multiple providers, find MetaMask
-      if (ethereum.providers) {
-        const metaMaskProvider = ethereum.providers.find((p: any) => p.isMetaMask);
-        if (metaMaskProvider) return new BrowserProvider(metaMaskProvider);
-      }
-      
-      // Default to the window.ethereum provider
-      return new BrowserProvider(ethereum);
-    } catch (error) {
-      console.error("Error creating provider:", error);
-      return null;
-    }
-  };
-
-  // Function to lookup ENS name for an address
-  const lookupEnsName = async (address: string) => {
-    try {
-      // Check cache first
-      if (ensCache.has(address)) {
-        return ensCache.get(address);
-      }
-      
-      const provider = getProvider();
-      if (!provider) return null;
-      
-      // Attempt to resolve the ENS name
-      const name = await provider.lookupAddress(address);
-      
-      // Cache the result (even if null)
-      ensCache.set(address, name);
-      
-      return name;
-    } catch (error) {
-      console.error("Error looking up ENS name:", error);
-      return null;
-    }
-  };
-
-  // Function to open MetaMask on mobile
-  const openMetaMaskMobile = () => {
-    if (typeof window === 'undefined') return;
-
-    // Store the current message for verification
-    sessionStorage.setItem('authMessage', signatureMessage);
-    
-    // Create deep link that will trigger both connection and signing
-    const dappUrl = `${window.location.host}${window.location.pathname}`;
-    // The action=sign parameter signals to MetaMask that we want a signature
-    const deepLink = `https://metamask.app.link/dapp/${dappUrl}?action=sign`;
-    
-    // Store a flag in sessionStorage to check if we're returning from MetaMask
-    sessionStorage.setItem('metamaskPending', 'true');
-    
-    // Update status before redirect
-    setStatus("Opening MetaMask...");
-    
-    // Open the deeplink
-    window.location.href = deepLink;
-  };
-
-  // Function to request signature only (for retry)
-  const requestSignature = async () => {
-    try {
-      const provider = getProvider();
-      if (!provider) throw new Error("No provider available");
-      
-      const signer = await provider.getSigner();
-      const newSignature = await signer.signMessage(signatureMessage);
-      setUserSignature(newSignature);
-      
-      const signerAddress = await signer.getAddress();
-      const formattedAddress = signerAddress.substring(0, 6) + "..." + 
-        signerAddress.substring(signerAddress.length - 4);
-      
-      // Check for ENS name
-      const name = await lookupEnsName(signerAddress);
-      if (name) setEnsName(name);
-      
-      // Update UI after authentication
-      setStatus("Authenticated ✓");
-      setAddress(formattedAddress);
-      
-      // Store connection info but NOT the signature
-      try {
-        localStorage.setItem('walletAddress', signerAddress);
-        localStorage.setItem('authStatus', 'Connected');
-        if (name) localStorage.setItem('ensName', name);
-      } catch (e) {
-        console.error('Error accessing localStorage:', e);
-      }
-      
-      console.log("Signature verified");
-    } catch (error) {
-      console.error("Signature request failed:", error);
-      setStatus("Authentication failed");
-    }
-  };
-
-  // Function to connect wallet 
-  const connect = useCallback(async () => {
-    // If on mobile and MetaMask not detected, deep link to MetaMask
-    if (isMobileDevice && !isMetaMaskInstalled()) {
-      openMetaMaskMobile();
-      return;
-    }
-
-    if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
-      try {
-        // First request accounts to establish connection
-        const provider = getProvider();
-        if (!provider) throw new Error("No provider available");
-
-        // Request account access - triggers MetaMask popup
-        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        
-        if (accounts.length === 0) {
-          throw new Error("No accounts returned - user may have rejected request");
-        }
-
-        // Format the connected address
-        const walletAddress = accounts[0];
-        const formattedAddress = walletAddress.substring(0, 6) + "..." + 
-          walletAddress.substring(walletAddress.length - 4);
-        
-        // Check for ENS name
-        const name = await lookupEnsName(walletAddress);
-        if (name) setEnsName(name);
-        
-        // Update UI to show connection is established but waiting for signature
-        setAddress(formattedAddress);
-        setStatus("Connected (Signing...)");
-        
-        try {
-          // Now request signature for authentication
-          const signer = await provider.getSigner();
-          const signature = await signer.signMessage(signatureMessage);
-          setUserSignature(signature);
-          
-          // Update UI after successful authentication
-          setStatus("Authenticated ✓");
-          
-          // Store only connection info in localStorage, NOT the signature
-          try {
-            console.log("Storing auth info in localStorage");
-            localStorage.setItem('walletAddress', walletAddress);
-            localStorage.setItem('authStatus', "Authenticated ✓");
-            
-            // Add an expiration time (optional, 24 hours from now)
-            const expiryTime = Date.now() + (24 * 60 * 60 * 1000);
-            localStorage.setItem('authExpiry', expiryTime.toString());
-            
-            if (name) localStorage.setItem('ensName', name);
-          } catch (e) {
-            console.error('Error accessing localStorage:', e);
-          }
-          
-          console.log("Authentication successful!");
-        } catch (signError) {
-          console.error("Error during signature:", signError);
-          setStatus("Connected (Not Authenticated)");
-          
-          // Store connection (without auth) info
-          try {
-            localStorage.setItem('walletAddress', walletAddress);
-            localStorage.setItem('authStatus', 'Connected');
-            if (name) localStorage.setItem('ensName', name);
-          } catch (e) {
-            console.error('Error accessing localStorage:', e);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to connect wallet:", error);
-        
-        // Handle specific errors
-        if (error.code === -32002) {
-          // Connection request already pending
-          setStatus("Request Pending");
-          setAddress("Check MetaMask");
-        } else if (error.code === 4001) {
-          // User rejected request
-          setStatus("Rejected");
-          setAddress("User rejected connection");
-        } else {
-          setStatus("Error");
-          setAddress("Connection failed");
-        }
-      }
-    } else {
-      console.log('MetaMask (or other wallet) is not installed!');
-      setStatus("No Wallet");
-      setAddress("Install MetaMask");
-    }
-  }, [isMobileDevice]);
-
-  // Function to disconnect wallet
-  const disconnect = () => {
-    setStatus("Disconnected");
-    setAddress("Not connected");
-    setEnsName(null);
-    setUserSignature(null);
-    
-    // Clear localStorage
-    try {
-      console.log("Clearing auth info from localStorage");
-      localStorage.removeItem('walletAddress');
-      localStorage.removeItem('authStatus');
-      localStorage.removeItem('ensName');
-    } catch (e) {
-      console.error('Error accessing localStorage:', e);
-    }
-  };
-
-  // Check for existing connection on component mount
+  // Initialize auth state from localStorage
   useEffect(() => {
-    // Only run on client side
-    if (typeof window === 'undefined') return;
-    
-    console.log("AuthContext initializing...");
-    
-    // Safe access of localStorage with try/catch
-    const getStoredValue = (key: string) => {
+    const loadAuth = async () => {
       try {
-        const value = localStorage.getItem(key);
-        console.log(`Retrieved ${key} from localStorage:`, value);
-        return value;
-      } catch (e) {
-        console.error('Error accessing localStorage:', e);
-        return null;
+        setIsLoading(true);
+        
+        // Try to restore auth from localStorage
+        const storedAuthMethod = localStorage.getItem('lit-auth-method');
+        const storedPKP = localStorage.getItem('lit-pkp');
+        const storedSessionSigs = localStorage.getItem('lit-session-sigs');
+        
+        if (storedAuthMethod && storedPKP && storedSessionSigs) {
+          setAuthMethod(JSON.parse(storedAuthMethod));
+          setPKP(JSON.parse(storedPKP));
+          setSessionSigs(JSON.parse(storedSessionSigs));
+          setIsAuthenticated(true);
+          
+          // Validate session sigs - you might want to check if they're expired
+          // and refresh them if needed
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        console.error('Error loading auth state:', err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    // Check if mobile
-    setIsMobileDevice(checkIfMobile());
-    
-    // Check for existing connection in localStorage
-    const storedAddress = getStoredValue('walletAddress');
-    const storedStatus = getStoredValue('authStatus');
-    const storedEnsName = getStoredValue('ensName');
-    
-    if (storedAddress) {
-      console.log("Found stored address, restoring auth state");
-      const formattedAddress = storedAddress.substring(0, 6) + "..." + 
-        storedAddress.substring(storedAddress.length - 4);
-      setAddress(formattedAddress);
-      
-      if (storedEnsName) {
-        setEnsName(storedEnsName);
-      }
-      
-      // Keep the authenticated status instead of changing to Re-auth needed
-      setStatus(storedStatus || "Connected");
-    }
-    
-    // Check if returning from MetaMask mobile
-    const isPending = sessionStorage.getItem('metamaskPending') === 'true';
-    if (isPending) {
-      // Clear the pending flag
-      sessionStorage.removeItem('metamaskPending');
-      
-      // If we have ethereum, try to connect and sign immediately
-      if (typeof window !== 'undefined' && window.ethereum) {
-        console.log("Returning from MetaMask, attempting authentication...");
-        connect();
-      }
-    }
-    
-    // Set up account change listener
-    if (typeof window !== 'undefined' && typeof window.ethereum !== 'undefined') {
-      const handleAccountsChanged = async (accounts: string[]) => {
-        if (accounts.length === 0) {
-          // Wallet disconnected
-          disconnect();
-        } else {
-          // Account changed, update display
-          const walletAddress = accounts[0];
-          const formattedAddress = walletAddress.substring(0, 6) + "..." + 
-            walletAddress.substring(walletAddress.length - 4);
-          setAddress(formattedAddress);
+    loadAuth();
+  }, []);
+
+  // Handle redirect callback after social login
+  useEffect(() => {
+    const handleRedirectCallback = async () => {
+      // Check if we're on a callback URL
+      if (typeof window !== 'undefined' && window.location.search.includes('code=')) {
+        // Handle the auth callback
+        setIsLoading(true);
+        try {
+          // Logic to handle redirect would be here
+          // This would be based on the current path and search params
+          // to determine which provider to use for authentication
           
-          // Check for ENS name
-          const name = await lookupEnsName(walletAddress);
-          if (name) setEnsName(name);
-          
-          setStatus("Connected");
-          // Clear signature as it's no longer valid for the new account
-          setUserSignature(null);
-          
-          // Update localStorage - but never store signatures
-          try {
-            localStorage.setItem('walletAddress', walletAddress);
-            localStorage.setItem('authStatus', 'Connected');
-            if (name) localStorage.setItem('ensName', name);
-          } catch (e) {
-            console.error('Error accessing localStorage:', e);
+          // This is placeholder logic - actual implementation depends on your routes
+          if (pathname?.includes('/auth/google')) {
+            // Google auth logic
+          } else if (pathname?.includes('/auth/discord')) {
+            // Discord auth logic
           }
+        } catch (err) {
+          console.error('Error handling redirect:', err);
+          setError(err instanceof Error ? err : new Error(String(err)));
+        } finally {
+          setIsLoading(false);
         }
-      };
+      }
+    };
+    
+    handleRedirectCallback();
+  }, [pathname]);
 
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-
-      // Add a visibility change listener to detect returning from MetaMask
-      const handleVisibilityChange = () => {
-        if (!document.hidden && sessionStorage.getItem('metamaskPending') === 'true') {
-          // User has come back from MetaMask, try to connect and authenticate
-          connect();
-        }
-      };
+  // Auth methods
+  const loginWithGoogle = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
       
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-
-      // Cleanup listeners on component unmount
-      return () => {
-        if (window.ethereum.removeListener) {
-          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-        }
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-      };
+      // Get the redirect URI dynamically
+      const redirectUri = `${window.location.origin}/auth/callback/google`;
+      
+      // Redirect to Google OAuth flow
+      await signInWithGoogle(redirectUri);
+      
+      // Note: The rest of the auth flow will happen when redirected back
+    } catch (err) {
+      console.error('Error logging in with Google:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsLoading(false);
     }
-  }, [connect]);
+  }, []);
+  
+  const loginWithDiscord = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Get the redirect URI dynamically
+      const redirectUri = `${window.location.origin}/auth/callback/discord`;
+      
+      // Redirect to Discord OAuth flow
+      await signInWithDiscord(redirectUri);
+      
+      // Note: The rest of the auth flow will happen when redirected back
+    } catch (err) {
+      console.error('Error logging in with Discord:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+  
+  const loginWithWebAuthn = useCallback(async () => {
+    // Implement WebAuthn login
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // WebAuthn login logic would be implemented here
+      // This depends on the Lit Protocol WebAuthn provider
+      
+    } catch (err) {
+      console.error('Error logging in with WebAuthn:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  // Define computed properties
-  const isAuthenticated = status.includes("Authenticated");
-  const isConnected = isAuthenticated || status.includes("Connected");
+  // Update session
+  const updateSession = useCallback(async (newPKP: IRelayPKP, newAuthMethod: AuthMethod) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Generate session signatures
+      const sessionSigs = await getSessionSigs({
+        pkpPublicKey: newPKP.publicKey,
+        authMethod: newAuthMethod,
+        sessionSigsParams: {
+          chain: "ethereum",
+          expiration: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+        },
+      });
+      
+      // Update state
+      setPKP(newPKP);
+      setAuthMethod(newAuthMethod);
+      setSessionSigs(sessionSigs);
+      setIsAuthenticated(true);
+      
+      // Store in localStorage
+      localStorage.setItem('lit-auth-method', JSON.stringify(newAuthMethod));
+      localStorage.setItem('lit-pkp', JSON.stringify(newPKP));
+      localStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigs));
+      
+      return { pkp: newPKP, sessionSigs };
+    } catch (err) {
+      console.error('Error updating session:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+  
+  // Logout
+  const logOut = useCallback(() => {
+    setAuthMethod(null);
+    setPKP(null);
+    setSessionSigs(null);
+    setIsAuthenticated(false);
+    
+    // Clear localStorage
+    localStorage.removeItem('lit-auth-method');
+    localStorage.removeItem('lit-pkp');
+    localStorage.removeItem('lit-session-sigs');
+    
+    // Redirect to login page
+    router.push('/login');
+  }, [router]);
 
-  // Create the auth value object that will be passed to consumers
-  const authValue: AuthContextType = {
-    status,
-    address,
-    ensName,
+  // Context value
+  const value: AuthContextType = {
     isAuthenticated,
-    isConnected,
-    userSignature,
-    connect,
-    requestSignature,
-    disconnect
+    isLoading,
+    authMethod,
+    pkp,
+    sessionSigs,
+    error,
+    
+    loginWithGoogle,
+    loginWithDiscord,
+    loginWithWebAuthn,
+    logOut,
+    setPKP,
+    setSessionSigs,
   };
 
   return (
-    <AuthContext.Provider value={authValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-// Custom hook to use the auth context
+// Hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

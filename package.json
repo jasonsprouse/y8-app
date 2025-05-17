@@ -1,6 +1,6 @@
 {
   "name": "y8-app",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "y8 app",
   "main": "index.js",
   "scripts": {
@@ -13,20 +13,33 @@
   "author": "Jason Sprouse",
   "license": "ISC",
   "dependencies": {
-    "ethers": "^6.13.5",
+    "@lit-protocol/auth-helpers": "^7.1.1",
+    "@lit-protocol/constants": "^7.1.1",
+    "@lit-protocol/lit-auth-client": "^7.1.1",
+    "@lit-protocol/lit-node-client": "^7.1.1",
+    "@lit-protocol/pkp-ethers": "^7.1.1",
+    "@lit-protocol/types": "^7.1.1",
+    "@simplewebauthn/browser": "^13.1.0",
+    "@spruceid/siwe-parser": "3.0.0",
+    "@stytch/nextjs": "^21.4.4",
+    "@stytch/vanilla-js": "^5.22.5",
+    "@tanstack/react-query": "^5.74.4",
+    "ethers": "6.13.6",
     "framer-motion": "^12.6.3",
     "next": "^15.2.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-hot-toast": "^2.5.2"
+    "react-hot-toast": "^2.5.2",
+    "viem": "^2.27.3",
+    "wagmi": "^2.14.16"
   },
   "volta": {
     "node": "18.18.0",
     "npm": "10.5.1"
   },
   "devDependencies": {
-    "@types/node": "22.14.0",
-    "@types/react": "19.1.0",
+    "@types/node": "22.14.1",
+    "@types/react": "19.1.2",
     "typescript": "5.8.3"
   }
 }
