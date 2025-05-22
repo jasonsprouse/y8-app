@@ -24,7 +24,7 @@ import { useAccounts } from '../hooks/useAccounts';
 import { useConnect } from 'wagmi';
 // For wagmi v1+, ensure config is correctly passed or accessible for these actions
 import { getAccount, getWalletClient } from '@wagmi/core'; 
-import { config as wagmiConfig } from '../../app/auth/page'; // Assuming config is exported from page.tsx
+import { config as wagmiConfig } from '../app/auth/page'; // Corrected import path
 
 // Define context type
 interface AuthContextType {
