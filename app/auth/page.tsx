@@ -8,7 +8,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // import { StytchProvider } from '@stytch/nextjs';
 // import { createStytchUIClient } from '@stytch/nextjs/ui';
 
-import Image from 'next/image';
+// import Image from 'next/image';
+import { useEffect, useState } from 'react'; // Added useState
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext'; 
+import LoginMethods from '../../components/LitAuth/LoginMethods'; 
+import SignUpMethods from '../../components/LitAuth/SignUpMethods'; // Added
+import AccountSelection from '../../components/LitAuth/AccountSelection'; 
+import Loading from '../../components/LitAuth/Loading'; 
 
 // 1. Initialize a QueryClient
 const queryClient = new QueryClient();
@@ -17,7 +24,7 @@ const queryClient = new QueryClient();
 const chains = [mainnet, goerli, optimism] as const; // `as const` for better type inference
 
 // 3. Create the Wagmi config
-export const config = createConfig({
+export const wagmiClientConfig = createConfig({
   chains: chains,
   connectors: [
     metaMask({
@@ -50,106 +57,102 @@ export const config = createConfig({
 //   );
 
 export default function AuthPage() {
+  const router = useRouter();
+  const {
+    isAuthenticated,
+    isLoading,
+    error,
+    pendingPkpSelection,
+    availablePkps,
+    setPKP,
+    loginWithGoogle,
+    loginWithDiscord,
+    loginWithEthWallet,    // New
+    loginWithWebAuthn,    
+    loginWithStytchOtp,   // New
+    registerWithWebAuthn // New
+    // processAuthMethod, // Not directly called by page, but by context
+  } = useAuth();
+
+  const [showSignUp, setShowSignUp] = useState(false); // Added state for view toggle
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/space');
+    }
+  }, [isAuthenticated, router]);
+
+  // The WagmiProvider and QueryClientProvider should wrap the conditional rendering logic
+  // to ensure context is available to all components that might need it (e.g., WalletMethods inside LoginMethods).
+  let content;
+
+  if (isLoading) {
+    content = <Loading copy="Initializing authentication..." />;
+  } else if (error) {
+    // Render error within the layout provided by LoginMethods or AccountSelection if desired,
+    // or a generic error display if the error is fatal for the page.
+    // For simplicity, a generic error display here.
+    // If specific components should display the error, pass it as a prop.
+    content = (
+      <div className="container">
+        <div className="wrapper">
+          <div className="alert alert--error">
+            <p>Error: {error.message}</p>
+          </div>
+        </div>
+      </div>
+    );
+  } else if (pendingPkpSelection && availablePkps && availablePkps.length > 0) {
+    content = (
+      <AccountSelection
+        accounts={availablePkps}
+        setCurrentAccount={setPKP}
+        error={error} // Pass error if it's relevant to account selection stage
+      />
+    );
+  } else if (!isAuthenticated) {
+    if (showSignUp) {
+      content = (
+        <SignUpMethods
+          handleGoogleLogin={loginWithGoogle}
+          handleDiscordLogin={loginWithDiscord}
+          authWithEthWallet={loginWithEthWallet}
+          registerWithWebAuthn={registerWithWebAuthn}
+          authWithWebAuthn={loginWithWebAuthn} // For "already have account" or similar flows
+          authWithStytch={loginWithStytchOtp}
+          goToLogin={() => setShowSignUp(false)}
+          error={error}
+        />
+      );
+    } else {
+      content = (
+        <LoginMethods
+          handleGoogleLogin={loginWithGoogle}
+          handleDiscordLogin={loginWithDiscord}
+          authWithWebAuthn={loginWithWebAuthn}
+          authWithEthWallet={loginWithEthWallet}
+          authWithStytch={loginWithStytchOtp}
+          signUp={() => setShowSignUp(true)}
+          error={error}
+        />
+      );
+    }
+  } else {
+    // Should be redirected by useEffect, but as a fallback:
+    content = <Loading copy="Redirecting..." />;
+  }
+  
   return (
     // 4. Wrap your app with QueryClientProvider and WagmiProvider
-    <WagmiProvider config={config}>
+    <WagmiProvider config={wagmiClientConfig}>
       <QueryClientProvider client={queryClient}>
-        <div className="auth-page">
-          <h1>Authenticate</h1>
-          <p>Choose your authentication method</p>
-          <div className="buttons-container">
-            <button type="button" className="btn btn--outline">
-              <div className="btn__icon">
-                <Image
-                  src="/google.png"
-                  alt="Google logo"
-                  fill={true}
-                ></Image>
-              </div>
-              <span className="btn__label">Continue with Google</span>
-            </button>
-            <button type="button" className="btn btn--outline">
-              <div className="btn__icon">
-                <Image
-                  src="/discord.png"
-                  alt="Discord logo"
-                  fill={true}
-                ></Image>
-              </div>
-              <span className="btn__label">Continue with Discord</span>
-            </button>
-            <button type="button" className="btn btn--outline">
-              <div className="btn__icon">
-                <Image
-                  src="/webauthn.png"
-                  alt="WebAuthn logo"
-                  fill={true}
-                ></Image>
-              </div>
-              <span className="btn__label">Continue with WebAuthn</span>
-            </button>
-            {/* Uncomment when Stytch is ready */}
-            {/* <StytchProvider stytch={stytch}>
-              {({ login }) => (
-                <>
-                  <button
-                    type="button"
-                    className="btn btn--outline"
-                    onClick={() => login('email')}
-                  >
-                    Continue with Stytch Email
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn--outline"
-                    onClick={() => login('sms')}
-                  >
-                    Continue with Stytch SMS
-                  </button>
-                </>
-              )}
-            </StytchProvider> */}
-          </div>
-          {/* Example of how to use connect buttons (you'll need to implement the actual connection logic) */}
-          {/* <ConnectButtons /> */}
-        </div>
+        {content}
       </QueryClientProvider>
     </WagmiProvider>
   );
 }
 
-/*
-// Example component to demonstrate connection (you would typically place this elsewhere)
-// and use hooks like useConnect, useAccount, useDisconnect from 'wagmi'
-
-import { useConnect, useAccount, useDisconnect } from 'wagmi';
-
-function ConnectButtons() {
-  const { connectors, connect } = useConnect();
-  const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
-
-  if (isConnected) {
-    return (
-      <div>
-        <p>Connected as: {address}</p>
-        <button onClick={() => disconnect()} className="btn">Disconnect</button>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      {connectors.filter(c => c.ready).map((connector) => (
-        <button
-          key={connector.id}
-          onClick={() => connect({ connector })}
-          className="btn btn--primary"
-        >
-          Connect with {connector.name}
-        </button>
-      ))}
-    </div>
-  );
-}
+/* 
+// Removed the static buttons and ConnectButtons example as AuthPage will now dynamically render based on auth state.
+// Ensure that AuthProvider is wrapping this page at a higher level (e.g., in layout.tsx).
 */

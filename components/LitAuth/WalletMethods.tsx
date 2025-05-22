@@ -1,5 +1,5 @@
 import { useConnect } from 'wagmi';
-import { useIsMounted } from '../hooks/useIsMounted';
+import { useIsMounted } from '../../hooks/useIsMounted'; // Corrected import path
 import Image from 'next/image';
 
 interface WalletMethodsProps {
