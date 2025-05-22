@@ -17,7 +17,7 @@ export default function withAuth<P extends object>(WrappedComponent: React.Compo
         // If the error is something else, this check might need refinement.
         router.replace('/auth');
       }
-    }, [isAuthenticated, isLoading, router]); // Removed error from dependency array
+    }, [isAuthenticated, isLoading, router, error]); // Added error to dependency array
 
     if (isLoading) {
       return <Loading copy="Authenticating..." />;
