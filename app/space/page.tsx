@@ -6,9 +6,10 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
 import styles from '../../styles/Space.module.css';
+import withAuth from '../../components/withAuth'; // Import the HOC
 
-export default function SpaceServicesPage() {
-  const { isAuthenticated } = useAuth();
+function SpaceServicesPage() { // Changed to a named function, not default export
+  const { isAuthenticated } = useAuth(); // This can be removed if withAuth handles all auth logic display
   const [activeService, setActiveService] = useState(0);
   const [questionnaireStep, setQuestionnaireStep] = useState(0);
   const [answers, setAnswers] = useState({
@@ -252,3 +253,5 @@ export default function SpaceServicesPage() {
     </div>
   );
 }
+
+export default withAuth(SpaceServicesPage); // Wrap the component with the HOC
