@@ -43,7 +43,7 @@ describe('AccountSelection Component', () => {
     const secondRadio = screen.getByLabelText(mockAccounts[1].ethAddress.toLowerCase()) as HTMLInputElement;
 
     // DefaultValue "0" in Radix RadioGroup implies the first item is initially selected.
-     expect(firstRadio).toHaveAttribute('aria-checked', 'true'); // Check Radix's aria-checked attribute
+    expect(firstRadio).toHaveAttribute('aria-checked', 'true'); // Check Radix's aria-checked attribute
     expect(secondRadio).toHaveAttribute('aria-checked', 'false');
 
     fireEvent.click(secondRadio);
