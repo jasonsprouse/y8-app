@@ -331,7 +331,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(err instanceof Error ? err : new Error(String(err)));
       setIsLoading(false);
     }
-  }, [connectAsync, processAuthMethod, wagmiConfig]); // Added wagmiConfig to dependency array
+  },}, [connectAsync, processAuthMethod, wagmiClientConfig]); // Updated dependency array
 
   const loginWithStytchOtp = useCallback(async (token: string, userId?: string, methodType?: string) => { // Renamed 'method' to 'methodType'
     setIsLoading(true);
