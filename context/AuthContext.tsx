@@ -309,13 +309,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       await connectAsync({ connector });
-      // Ensure wagmiConfig is correctly sourced and passed if getAccount/getWalletClient need it explicitly
+      // Ensure wagmiClientConfig is correctly sourced and passed if getAccount/getWalletClient need it explicitly
       // For wagmi v1+, config is often implicitly handled by @wagmi/core if provider is setup
-      const account = getAccount(wagmiConfig); 
+      const account = getAccount(wagmiClientConfig); 
       if (!account.address || !account.chainId) { 
         throw new Error('Wallet not connected or address/chainId unavailable.');
       }
-      const walletClient = await getWalletClient(wagmiConfig, { chainId: account.chainId });
+      const walletClient = await getWalletClient(wagmiClientConfig, { chainId: account.chainId });
       if (!walletClient) {
         throw new Error('Wallet client not found.');
       }
