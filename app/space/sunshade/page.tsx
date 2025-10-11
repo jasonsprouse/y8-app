@@ -33,7 +33,7 @@ const FEE_PERCENTAGE = 1;
 const IPFS_GATEWAY = "https://ipfs.io/ipfs/";
 
 export default function SunshadeNFTMinter() {
-  const { isAuthenticated, address, connect } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [nftName, setNftName] = useState("");
@@ -367,7 +367,7 @@ export default function SunshadeNFTMinter() {
             {!isAuthenticated ? (
               <div className={styles.connectPrompt}>
                 <p>Connect your wallet to mint NFTs</p>
-                <button onClick={connect} className={styles.connectButton}>
+                <button onClick={() => {/* TODO: Implement wallet connection */}} className={styles.connectButton}>
                   Connect Wallet
                 </button>
               </div>
