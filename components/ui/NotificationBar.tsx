@@ -1,5 +1,5 @@
 import React from 'react';
-import WalletConnect from '../WalletConnect'; // Import WalletConnect
+
 
 const NotificationBar = () => {
   return (
