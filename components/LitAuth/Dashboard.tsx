@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { PKPEthersWallet } from '@lit-protocol/pkp-ethers';
 import { useRouter } from 'next/router';
 import { useDisconnect } from 'wagmi';
-import { litNodeClient, getPKPs } from '../utils/lit';
+import { litNodeClient, getPKPs } from '../../utils/lit';
 import { ethers } from 'ethers';
 
 interface DashboardProps {
@@ -46,7 +46,7 @@ export default function Dashboard({
       setSignature(signature);
 
       // Get the address associated with the signature created by signing the message
-      const recoveredAddr = ethers.utils.verifyMessage(message, signature);
+      const recoveredAddr = ethers.verifyMessage(message, signature);
       setRecoveredAddress(recoveredAddr);
 
       // Check if the address associated with the signature is the same as the current PKP
