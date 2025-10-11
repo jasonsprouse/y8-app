@@ -46,7 +46,7 @@ export default function AuthLogin() {
       <div className={styles.authContainer}>
         <AccountSelection
           accounts={availablePkps}
-          setAccount={setPKP}
+          setCurrentAccount={setPKP}
           error={error}
         />
       </div>
@@ -74,7 +74,8 @@ export default function AuthLogin() {
             handleGoogleLogin={loginWithGoogle}
             handleDiscordLogin={loginWithDiscord}
             authWithEthWallet={loginWithEthWallet}
-            authWithWebAuthn={registerWebAuthn}
+            registerWithWebAuthn={registerWebAuthn}
+            authWithWebAuthn={loginWithWebAuthn}
             authWithStytch={loginWithStytchOtp}
             goToLogin={() => setAuthView('login')}
             error={error}
