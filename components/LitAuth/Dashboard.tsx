@@ -1,10 +1,10 @@
 import { IRelayPKP, SessionSigs } from '@lit-protocol/types';
-import { ethers } from 'ethers';
 import { useState } from 'react';
 import { PKPEthersWallet } from '@lit-protocol/pkp-ethers';
 import { useRouter } from 'next/router';
 import { useDisconnect } from 'wagmi';
-import { litNodeClient } from '../utils/lit';
+import { litNodeClient, getPKPs } from '../utils/lit';
+import { ethers } from 'ethers';
 
 interface DashboardProps {
   currentAccount: IRelayPKP;
@@ -69,6 +69,10 @@ export default function Dashboard({
     router.reload();
   }
 
+  const shortenAddress = (address: string) => {
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  };
+
   return (
     <div className="container">
       <div className="logout-container">
@@ -78,7 +82,7 @@ export default function Dashboard({
       </div>
       <h1>Ready for the open web</h1>
       <div className="details-card">
-        <p>My address: {currentAccount.ethAddress.toLowerCase()}</p>
+        <p>My address: {shortenAddress(currentAccount.ethAddress)}</p>
       </div>
       <div className="divider"></div>
       <div className="message-card">
