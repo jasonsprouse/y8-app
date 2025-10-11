@@ -327,9 +327,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError(null);
       
-      const result = await litRegisterWebAuthn();
-      const newPKP = await mintPKP(result);
-      await updateSession(newPKP, result);
+      const authMethodResult = await litRegisterWebAuthn();
+      const newPKP = await mintPKP(authMethodResult);
+      await updateSession(newPKP, authMethodResult);
     } catch (err) {
       console.error('Error registering with WebAuthn:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
