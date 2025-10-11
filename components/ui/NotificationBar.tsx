@@ -1,6 +1,5 @@
 import React from 'react';
 
-
 const NotificationBar = () => {
   return (
     <div className="notification-bar-container">

@@ -8,6 +8,7 @@ import {
   SessionSigs 
 } from '@lit-protocol/types';
 import { AuthMethodType } from '@lit-protocol/constants';
+import { LitResourceAbilityRequest } from '@lit-protocol/auth-helpers';
 import { 
   litNodeClient, 
   getSessionSigs, 
@@ -126,24 +127,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authMethod: newAuthMethod,
         sessionSigsParams: {
           chain: "ethereum",
-          expiration: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
           resourceAbilityRequests: [
             {
-              resource: {
-                resource_id: "*",
-                resource_type: "litAction",
-              },
-              ability: "execute",
-            },
+              resource: { resource: "*", resourcePrefix: "lit-litaction" },
+              ability: "lit-action-execution",
+            } as LitResourceAbilityRequest,
           ],
           authNeededCallback: async () => {
             return {
-              authSig: {
-                sig: "placeholder_signature",
-                derivedVia: "web3.eth.personal.sign",
-                signedMessage: `Authentication at ${Date.now()}`,
-                address: newPKP.ethAddress,
-              },
+              sig: "",
+              derivedVia: "web3.eth.personal.sign",
+              signedMessage: `Authentication at ${Date.now()}`,
+              address: newPKP.ethAddress,
             };
           },
         },
