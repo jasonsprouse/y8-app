@@ -37,11 +37,7 @@ export default function Home() {
     <div className="page-content">
       {/* Use Dashboard component for user info */}
       {pkp && sessionSigs && (
-        <Dashboard
-          currentPKP={pkp}
-          sessionSigs={sessionSigs}
-          handleLogout={logOut}
-        />
+        <Dashboard currentAccount={pkp} sessionSigs={sessionSigs} />
       )}
 
       {/* Main navigation cards */}
