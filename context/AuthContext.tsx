@@ -189,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       
       const redirectUri = `${window.location.origin}/auth/callback/google`;
-      const result = await signInWithGoogle(redirectUri);
+      const result = await authenticateWithGoogle(redirectUri);
       
       const pkps = await getPKPs(result);
       
@@ -218,7 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       
       const redirectUri = `${window.location.origin}/auth/callback/discord`;
-      const result = await signInWithDiscord(redirectUri);
+      const result = await authenticateWithDiscord(redirectUri);
       
       const pkps = await getPKPs(result);
       
@@ -327,8 +327,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError(null);
       
-      const authMethodResult = await litRegisterWebAuthn();
-      const newPKP = await mintPKP(authMethodResult);
+      const newPKP = await litRegisterWebAuthn();
+      const authMethodResult: AuthMethod = await authenticateWithWebAuthn();
       await updateSession(newPKP, authMethodResult);
     } catch (err) {
       console.error('Error registering with WebAuthn:', err);
