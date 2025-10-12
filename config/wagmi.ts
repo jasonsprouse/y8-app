@@ -2,7 +2,7 @@ import { createConfig, http } from 'wagmi';
 import { mainnet, polygon, optimism } from 'wagmi/chains';
 import { metaMask, walletConnect, coinbaseWallet, injected } from 'wagmi/connectors';
 
-export const config = createConfig({
+export const wagmiConfig = createConfig({
   chains: [mainnet, polygon, optimism],
   connectors: [
     metaMask(),
