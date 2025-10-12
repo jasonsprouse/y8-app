@@ -17,7 +17,7 @@ const queryClient = new QueryClient();
 const chains = [mainnet, goerli, optimism] as const; // `as const` for better type inference
 
 // 3. Create the Wagmi config
-export const config = createConfig({
+export const wagmiConfig = createConfig({
   chains: chains,
   connectors: [
     metaMask({
@@ -52,7 +52,7 @@ export const config = createConfig({
 export default function AuthPage() {
   return (
     // 4. Wrap your app with QueryClientProvider and WagmiProvider
-    <WagmiProvider config={config}>
+    <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <div className="auth-page">
           <h1>Authenticate</h1>
