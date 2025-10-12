@@ -1,6 +1,6 @@
 {
   "name": "y8-app",
-  "version": "0.0.13",
+  "version": "0.0.15",
   "description": "y8 app",
   "main": "index.js",
   "scripts": {
@@ -19,17 +19,20 @@
     "@lit-protocol/lit-node-client": "^7.1.1",
     "@lit-protocol/pkp-ethers": "^7.1.1",
     "@lit-protocol/types": "^7.1.1",
+    "@radix-ui/react-radio-group": "^1.3.8",
     "@simplewebauthn/browser": "^13.1.0",
     "@spruceid/siwe-parser": "3.0.0",
     "@stytch/nextjs": "^21.4.4",
     "@stytch/vanilla-js": "^5.22.5",
     "@tanstack/react-query": "^5.74.4",
+    "@walletconnect/modal": "^2.7.0",
     "ethers": "6.13.6",
     "framer-motion": "^12.6.3",
     "next": "^15.2.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.5.2",
+    "siwe": "^3.0.0",
     "viem": "^2.27.3",
     "wagmi": "^2.14.16"
   },

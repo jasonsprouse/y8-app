@@ -29,17 +29,26 @@ import {
       ? `https://${DOMAIN}`
       : `http://${DOMAIN}:3000`;
   
-  export const SELECTED_LIT_NETWORK = ((process.env
-    .NEXT_PUBLIC_LIT_NETWORK as string) ||
-    LIT_NETWORK.DatilDev) as LIT_NETWORKS_KEYS;
+  // Update the network selection
+  export const SELECTED_LIT_NETWORK = 
+    (process.env.NEXT_PUBLIC_LIT_NETWORK as LIT_NETWORKS_KEYS) || 
+    'datil';
   
+  // Update litNodeClient with error handling
   export const litNodeClient: LitNodeClient = new LitNodeClient({
     alertWhenUnauthorized: false,
     litNetwork: SELECTED_LIT_NETWORK,
     debug: true,
   });
   
-  litNodeClient.connect();
+  // Wrap connection in async IIFE to properly handle errors
+  (async () => {
+    try {
+      await litNodeClient.connect();
+    } catch (err) {
+      console.error("Error connecting to Lit Node:", err);
+    }
+  })();
   
   const litRelay = new LitRelay({
     relayUrl: LitRelay.getRelayUrl(SELECTED_LIT_NETWORK),

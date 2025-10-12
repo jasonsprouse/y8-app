@@ -20,8 +20,10 @@ export default function useAuthenticate(redirectUri?: string) {
 
   // wagmi hook
   const { connectAsync } = useConnect({
-    onError: (err: unknown) => {
-      setError(err as Error);
+    mutation: {
+      onError: (err: unknown) => {
+        setError(err as Error);
+      },
     },
   });
 
@@ -75,16 +77,14 @@ export default function useAuthenticate(redirectUri?: string) {
       setAuthMethod(undefined);
 
       try {
-        const { account, connector: activeConnector } = await connectAsync(
-          connector
-        );
-        const signer = await activeConnector.getSigner();
+        const { accounts } = await connectAsync(connector);
+        const signer = await connector.getSigner();
         const signMessage = async (message: string) => {
           const sig = await signer.signMessage(message);
           return sig;
         };
         const result: AuthMethod = await authenticateWithEthWallet(
-          account,
+          accounts[0],
           signMessage
         );
         setAuthMethod(result);

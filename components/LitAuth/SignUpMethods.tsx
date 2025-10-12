@@ -4,7 +4,7 @@ import AuthMethods from './AuthMethods';
 import WalletMethods from './WalletMethods';
 import WebAuthn from './WebAuthn';
 import StytchOTP from './StytchOTP';
-import { SELECTED_LIT_NETWORK } from '../utils/lit';
+import { SELECTED_LIT_NETWORK } from '../../utils/lit';
 
 interface SignUpProps {
   handleGoogleLogin: () => Promise<void>;

@@ -6,6 +6,7 @@ import Header from '../components/ui/Header';
 import Navbar from '../components/ui/Navbar';
 import Footer from '../components/ui/Footer';
 import NotificationBar from '../components/ui/NotificationBar';
+import RouteGuard from '../components/RouteGuard';
 import '../styles/globals.css';
 
 // Configure fonts
@@ -46,7 +47,9 @@ export default function RootLayout({
           <Navbar />
 
           <main className="page-content">
-            {children}
+            <RouteGuard>
+              {children}
+            </RouteGuard>
           </main>
           
           <Footer />

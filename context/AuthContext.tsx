@@ -7,7 +7,22 @@ import {
   IRelayPKP, 
   SessionSigs 
 } from '@lit-protocol/types';
-import { litNodeClient, getSessionSigs, signInWithGoogle, signInWithDiscord } from '../utils/lit';
+import { AuthMethodType } from '@lit-protocol/constants';
+import { LitResourceAbilityRequest } from '@lit-protocol/auth-helpers';
+import { 
+  litNodeClient, 
+  getSessionSigs, 
+  signInWithGoogle, 
+  signInWithDiscord, 
+  authenticateWithGoogle, 
+  authenticateWithDiscord,
+  authenticateWithEthWallet,
+  authenticateWithWebAuthn,
+  authenticateWithStytch,
+  registerWebAuthn as litRegisterWebAuthn,
+  getPKPs,
+  mintPKP
+} from '../utils/lit';
 
 // Define context type
 interface AuthContextType {
@@ -17,11 +32,17 @@ interface AuthContextType {
   pkp: IRelayPKP | null;
   sessionSigs: SessionSigs | null;
   error: Error | null;
+  pendingPkpSelection: boolean;
+  availablePkps: IRelayPKP[] | null;
+  currentAuthMethodForPkpSelection: AuthMethod | null;
   
   // Auth methods
   loginWithGoogle: () => Promise<void>;
   loginWithDiscord: () => Promise<void>;
   loginWithWebAuthn: () => Promise<void>;
+  loginWithEthWallet: () => Promise<void>;
+  loginWithStytchOtp: (method: 'email' | 'phone') => Promise<void>;
+  registerWebAuthn: () => Promise<void>;
   logOut: () => void;
   setPKP: (pkp: IRelayPKP) => void;
   setSessionSigs: (sessionSigs: SessionSigs) => void;
@@ -35,10 +56,16 @@ const AuthContext = createContext<AuthContextType>({
   pkp: null,
   sessionSigs: null,
   error: null,
+  pendingPkpSelection: false,
+  availablePkps: null,
+  currentAuthMethodForPkpSelection: null,
   
   loginWithGoogle: async () => {},
   loginWithDiscord: async () => {},
   loginWithWebAuthn: async () => {},
+  loginWithEthWallet: async () => {},
+  loginWithStytchOtp: async () => {},
+  registerWebAuthn: async () => {},
   logOut: () => {},
   setPKP: () => {},
   setSessionSigs: () => {},
@@ -49,9 +76,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [authMethod, setAuthMethod] = useState<AuthMethod | null>(null);
-  const [pkp, setPKP] = useState<IRelayPKP | null>(null);
-  const [sessionSigs, setSessionSigs] = useState<SessionSigs | null>(null);
+  const [pkp, setPKPState] = useState<IRelayPKP | null>(null);
+  const [sessionSigs, setSessionSigsState] = useState<SessionSigs | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  const [pendingPkpSelection, setPendingPkpSelection] = useState<boolean>(false);
+  const [availablePkps, setAvailablePkps] = useState<IRelayPKP[] | null>(null);
+  const [currentAuthMethodForPkpSelection, setCurrentAuthMethodForPkpSelection] = useState<AuthMethod | null>(null);
   
   const router = useRouter();
   const pathname = usePathname();
@@ -62,150 +92,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         setIsLoading(true);
         
-        // Try to restore auth from localStorage
         const storedAuthMethod = localStorage.getItem('lit-auth-method');
         const storedPKP = localStorage.getItem('lit-pkp');
         const storedSessionSigs = localStorage.getItem('lit-session-sigs');
         
         if (storedAuthMethod && storedPKP && storedSessionSigs) {
           setAuthMethod(JSON.parse(storedAuthMethod));
-          setPKP(JSON.parse(storedPKP));
-          setSessionSigs(JSON.parse(storedSessionSigs));
+          setPKPState(JSON.parse(storedPKP));
+          setSessionSigsState(JSON.parse(storedSessionSigs));
           setIsAuthenticated(true);
-          
-          // Validate session sigs - you might want to check if they're expired
-          // and refresh them if needed
         } else {
           setIsAuthenticated(false);
         }
       } catch (err) {
-        console.error('Error loading auth state:', err);
+        console.error('Error loading auth:', err);
         setError(err instanceof Error ? err : new Error(String(err)));
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     loadAuth();
   }, []);
 
-  // Handle redirect callback after social login
-  useEffect(() => {
-    const handleRedirectCallback = async () => {
-      // Check if we're on a callback URL
-      if (typeof window !== 'undefined' && window.location.search.includes('code=')) {
-        // Handle the auth callback
-        setIsLoading(true);
-        try {
-          // Logic to handle redirect would be here
-          // This would be based on the current path and search params
-          // to determine which provider to use for authentication
-          
-          // This is placeholder logic - actual implementation depends on your routes
-          if (pathname?.includes('/auth/google')) {
-            // Google auth logic
-          } else if (pathname?.includes('/auth/discord')) {
-            // Discord auth logic
-          }
-        } catch (err) {
-          console.error('Error handling redirect:', err);
-          setError(err instanceof Error ? err : new Error(String(err)));
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-    
-    handleRedirectCallback();
-  }, [pathname]);
-
-  // Auth methods
-  const loginWithGoogle = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      // Get the redirect URI dynamically
-      const redirectUri = `${window.location.origin}/auth/callback/google`;
-      
-      // Redirect to Google OAuth flow
-      await signInWithGoogle(redirectUri);
-      
-      // Note: The rest of the auth flow will happen when redirected back
-    } catch (err) {
-      console.error('Error logging in with Google:', err);
-      setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-  
-  const loginWithDiscord = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      // Get the redirect URI dynamically
-      const redirectUri = `${window.location.origin}/auth/callback/discord`;
-      
-      // Redirect to Discord OAuth flow
-      await signInWithDiscord(redirectUri);
-      
-      // Note: The rest of the auth flow will happen when redirected back
-    } catch (err) {
-      console.error('Error logging in with Discord:', err);
-      setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-  
-  const loginWithWebAuthn = useCallback(async () => {
-    // Implement WebAuthn login
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      // WebAuthn login logic would be implemented here
-      // This depends on the Lit Protocol WebAuthn provider
-      
-    } catch (err) {
-      console.error('Error logging in with WebAuthn:', err);
-      setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Update session
+  // Update session with PKP and auth method
   const updateSession = useCallback(async (newPKP: IRelayPKP, newAuthMethod: AuthMethod) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      // Generate session signatures
-      const sessionSigs = await getSessionSigs({
+      const sessionSigsResult = await getSessionSigs({
         pkpPublicKey: newPKP.publicKey,
         authMethod: newAuthMethod,
         sessionSigsParams: {
           chain: "ethereum",
-          expiration: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+          resourceAbilityRequests: [
+            {
+              resource: { resource: "*", resourcePrefix: "lit-litaction" },
+              ability: "lit-action-execution",
+            } as LitResourceAbilityRequest,
+          ],
+          authNeededCallback: async () => {
+            return {
+              sig: "",
+              derivedVia: "web3.eth.personal.sign",
+              signedMessage: `Authentication at ${Date.now()}`,
+              address: newPKP.ethAddress,
+            };
+          },
         },
       });
       
-      // Update state
-      setPKP(newPKP);
+      setPKPState(newPKP);
       setAuthMethod(newAuthMethod);
-      setSessionSigs(sessionSigs);
+      setSessionSigsState(sessionSigsResult);
       setIsAuthenticated(true);
+      setPendingPkpSelection(false);
+      setAvailablePkps(null);
+      setCurrentAuthMethodForPkpSelection(null);
       
-      // Store in localStorage
       localStorage.setItem('lit-auth-method', JSON.stringify(newAuthMethod));
       localStorage.setItem('lit-pkp', JSON.stringify(newPKP));
-      localStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigs));
+      localStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigsResult));
       
-      return { pkp: newPKP, sessionSigs };
+      return { pkp: newPKP, sessionSigs: sessionSigsResult };
     } catch (err) {
       console.error('Error updating session:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -214,48 +165,226 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }
   }, []);
-  
+
+  // Set PKP (handles selection from multiple PKPs)
+  const setPKP = useCallback(async (selectedPkp: IRelayPKP) => {
+    if (!currentAuthMethodForPkpSelection) {
+      setError(new Error('No auth method available for PKP selection'));
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await updateSession(selectedPkp, currentAuthMethodForPkpSelection);
+    } catch (err) {
+      console.error('Error selecting PKP:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
+  }, [currentAuthMethodForPkpSelection, updateSession]);
+
+  // Login with Google
+  const loginWithGoogle = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const redirectUri = `${window.location.origin}/auth/callback/google`;
+      const result = await authenticateWithGoogle(redirectUri);
+      
+      const pkps = await getPKPs(result);
+      
+      if (pkps.length === 0) {
+        setError(new Error('No PKP found. Please sign up first.'));
+        return;
+      } else if (pkps.length === 1) {
+        await updateSession(pkps[0], result);
+      } else {
+        setAvailablePkps(pkps);
+        setCurrentAuthMethodForPkpSelection(result);
+        setPendingPkpSelection(true);
+      }
+    } catch (err) {
+      console.error('Error logging in with Google:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [updateSession]);
+
+  // Login with Discord
+  const loginWithDiscord = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const redirectUri = `${window.location.origin}/auth/callback/discord`;
+      const result = await authenticateWithDiscord(redirectUri);
+      
+      const pkps = await getPKPs(result);
+      
+      if (pkps.length === 0) {
+        setError(new Error('No PKP found. Please sign up first.'));
+        return;
+      } else if (pkps.length === 1) {
+        await updateSession(pkps[0], result);
+      } else {
+        setAvailablePkps(pkps);
+        setCurrentAuthMethodForPkpSelection(result);
+        setPendingPkpSelection(true);
+      }
+    } catch (err) {
+      console.error('Error logging in with Discord:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [updateSession]);
+
+  // Login with WebAuthn
+  const loginWithWebAuthn = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const result = await authenticateWithWebAuthn();
+      const pkps = await getPKPs(result);
+      
+      if (pkps.length === 0) {
+        setError(new Error('No PKP found. Please register first.'));
+        return;
+      } else if (pkps.length === 1) {
+        await updateSession(pkps[0], result);
+      } else {
+        setAvailablePkps(pkps);
+        setCurrentAuthMethodForPkpSelection(result);
+        setPendingPkpSelection(true);
+      }
+    } catch (err) {
+      console.error('Error logging in with WebAuthn:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [updateSession]);
+
+  // Login with Ethereum Wallet
+  const loginWithEthWallet = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const result = await authenticateWithEthWallet();
+      const pkps = await getPKPs(result);
+      
+      if (pkps.length === 0) {
+        setError(new Error('No PKP found. Please sign up first.'));
+        return;
+      } else if (pkps.length === 1) {
+        await updateSession(pkps[0], result);
+      } else {
+        setAvailablePkps(pkps);
+        setCurrentAuthMethodForPkpSelection(result);
+        setPendingPkpSelection(true);
+      }
+    } catch (err) {
+      console.error('Error logging in with wallet:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [updateSession]);
+
+  // Login with Stytch OTP
+  const loginWithStytchOtp = useCallback(async (method: 'email' | 'phone') => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const result = await authenticateWithStytch(method);
+      const pkps = await getPKPs(result);
+      
+      if (pkps.length === 0) {
+        setError(new Error('No PKP found. Please sign up first.'));
+        return;
+      } else if (pkps.length === 1) {
+        await updateSession(pkps[0], result);
+      } else {
+        setAvailablePkps(pkps);
+        setCurrentAuthMethodForPkpSelection(result);
+        setPendingPkpSelection(true);
+      }
+    } catch (err) {
+      console.error('Error logging in with Stytch:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [updateSession]);
+
+  // Register with WebAuthn
+  const registerWebAuthn = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const newPKP = await litRegisterWebAuthn();
+      const authMethodResult: AuthMethod = await authenticateWithWebAuthn();
+      await updateSession(newPKP, authMethodResult);
+    } catch (err) {
+      console.error('Error registering with WebAuthn:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [updateSession]);
+
   // Logout
   const logOut = useCallback(() => {
-    setAuthMethod(null);
-    setPKP(null);
-    setSessionSigs(null);
     setIsAuthenticated(false);
+    setAuthMethod(null);
+    setPKPState(null);
+    setSessionSigsState(null);
+    setError(null);
+    setPendingPkpSelection(false);
+    setAvailablePkps(null);
+    setCurrentAuthMethodForPkpSelection(null);
     
-    // Clear localStorage
     localStorage.removeItem('lit-auth-method');
     localStorage.removeItem('lit-pkp');
     localStorage.removeItem('lit-session-sigs');
     
-    // Redirect to login page
-    router.push('/login');
+    router.push('/');
   }, [router]);
 
-  // Context value
-  const value: AuthContextType = {
-    isAuthenticated,
-    isLoading,
-    authMethod,
-    pkp,
-    sessionSigs,
-    error,
-    
-    loginWithGoogle,
-    loginWithDiscord,
-    loginWithWebAuthn,
-    logOut,
-    setPKP,
-    setSessionSigs,
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        isLoading,
+        authMethod,
+        pkp,
+        sessionSigs,
+        error,
+        pendingPkpSelection,
+        availablePkps,
+        currentAuthMethodForPkpSelection,
+        loginWithGoogle,
+        loginWithDiscord,
+        loginWithWebAuthn,
+        loginWithEthWallet,
+        loginWithStytchOtp,
+        registerWebAuthn,
+        logOut,
+        setPKP,
+        setSessionSigs: setSessionSigsState,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
-// Hook to use auth context
+// Custom hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
