@@ -41,12 +41,14 @@ import {
     debug: true,
   });
   
-  // Wrap connection in try/catch
-  try {
-    litNodeClient.connect();
-  } catch (err) {
-    console.error("Error connecting to Lit Node:", err);
-  }
+  // Wrap connection in async IIFE to properly handle errors
+  (async () => {
+    try {
+      await litNodeClient.connect();
+    } catch (err) {
+      console.error("Error connecting to Lit Node:", err);
+    }
+  })();
   
   const litRelay = new LitRelay({
     relayUrl: LitRelay.getRelayUrl(SELECTED_LIT_NETWORK),
