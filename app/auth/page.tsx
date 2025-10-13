@@ -1,74 +1,63 @@
 "use client";
 
-import { WagmiProvider, createConfig, http } from 'wagmi';
-import { goerli, mainnet, optimism } from 'wagmi/chains';
-import { coinbaseWallet, metaMask } from 'wagmi/connectors';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Image from 'next/image';
-
-// 1. Initialize a QueryClient
-const queryClient = new QueryClient();
-
-// 2. Define your chains
-const chains = [mainnet, goerli, optimism] as const;
-
-// 3. Create the Wagmi config - RENAMED from 'config' to 'wagmiConfig'
-const wagmiConfig = createConfig({
-  chains: chains,
-  connectors: [
-    metaMask(),
-    coinbaseWallet({
-      appName: 'Y8 App',
-    }),
-  ],
-  transports: {
-    [mainnet.id]: http(),
-    [goerli.id]: http(),
-    [optimism.id]: http(),
-  },
-});
+import { useAuth } from '../../context/AuthContext';
 
 export default function AuthPage() {
+  const {
+    loginWithGoogle,
+    loginWithDiscord,
+    loginWithWebAuthn,
+    registerWebAuthn,
+    error,
+  } = useAuth();
+
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <div className="auth-page">
-          <h1>Authenticate</h1>
-          <p>Choose your authentication method</p>
-          <div className="buttons-container">
-            <button type="button" className="btn btn--outline">
-              <div className="btn__icon">
-                <Image
-                  src="/google.png"
-                  alt="Google logo"
-                  fill={true}
-                ></Image>
-              </div>
-              <span className="btn__label">Continue with Google</span>
-            </button>
-            <button type="button" className="btn btn--outline">
-              <div className="btn__icon">
-                <Image
-                  src="/discord.png"
-                  alt="Discord logo"
-                  fill={true}
-                ></Image>
-              </div>
-              <span className="btn__label">Continue with Discord</span>
-            </button>
-            <button type="button" className="btn btn--outline">
-              <div className="btn__icon">
-                <Image
-                  src="/webauthn.png"
-                  alt="WebAuthn logo"
-                  fill={true}
-                ></Image>
-              </div>
-              <span className="btn__label">Continue with WebAuthn</span>
-            </button>
+    <div className="auth-page">
+      <h1>Authenticate</h1>
+      <p>Choose your authentication method</p>
+      {error && <p className="text-red-500">{error.message}</p>}
+      <div className="buttons-container">
+        <button
+          type="button"
+          className="btn btn--outline"
+          onClick={loginWithGoogle}
+        >
+          <div className="btn__icon">
+            <Image src="/google.png" alt="Google logo" fill={true}></Image>
           </div>
-        </div>
-      </QueryClientProvider>
-    </WagmiProvider>
+          <span className="btn__label">Continue with Google</span>
+        </button>
+        <button
+          type="button"
+          className="btn btn--outline"
+          onClick={loginWithDiscord}
+        >
+          <div className="btn__icon">
+            <Image src="/discord.png" alt="Discord logo" fill={true}></Image>
+          </div>
+          <span className="btn__label">Continue with Discord</span>
+        </button>
+        <button
+          type="button"
+          className="btn btn--outline"
+          onClick={loginWithWebAuthn}
+        >
+          <div className="btn__icon">
+            <Image src="/webauthn.png" alt="WebAuthn logo" fill={true}></Image>
+          </div>
+          <span className="btn__label">Continue with WebAuthn</span>
+        </button>
+        {error && (
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={registerWebAuthn}
+          >
+            Register with WebAuthn
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

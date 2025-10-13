@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 
 // Define public paths that don't require authentication
-const publicPaths = ['/'];
+const publicPaths = ['/', '/auth', '/auth/callback/google', '/auth/callback/discord'];
 
 export default function RouteGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();

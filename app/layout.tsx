@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { Poppins, Inter } from 'next/font/google';
-import Providers from '../components/Providers';
+import ClientProviders from '../components/ClientProviders';
 import Header from '../components/ui/Header';
 import Navbar from '../components/ui/Navbar';
 import Footer from '../components/ui/Footer';
@@ -41,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <body>
-        <Providers>
+        <ClientProviders>
           <NotificationBar />
           <Header />
           <Navbar />
@@ -53,7 +53,7 @@ export default function RootLayout({
           </main>
           
           <Footer />
-        </Providers>
+        </ClientProviders>
       </body>
     </html>
   );

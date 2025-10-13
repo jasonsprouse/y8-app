@@ -10,11 +10,11 @@ import {
 import { AuthMethodType } from '@lit-protocol/constants';
 import { LitResourceAbilityRequest } from '@lit-protocol/auth-helpers';
 import { 
-  litNodeClient, 
-  getSessionSigs, 
-  signInWithGoogle, 
-  signInWithDiscord, 
-  authenticateWithGoogle, 
+  litNodeClient,
+  getSessionSigs,
+  signInWithGoogle,
+  signInWithDiscord,
+  authenticateWithGoogle,
   authenticateWithDiscord,
   authenticateWithEthWallet,
   authenticateWithWebAuthn,
@@ -38,7 +38,9 @@ interface AuthContextType {
   
   // Auth methods
   loginWithGoogle: () => Promise<void>;
+  handleGoogleCallback: () => Promise<void>;
   loginWithDiscord: () => Promise<void>;
+  handleDiscordCallback: () => Promise<void>;
   loginWithWebAuthn: () => Promise<void>;
   loginWithEthWallet: () => Promise<void>;
   loginWithStytchOtp: (method: 'email' | 'phone') => Promise<void>;
@@ -97,10 +99,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedSessionSigs = localStorage.getItem('lit-session-sigs');
         
         if (storedAuthMethod && storedPKP && storedSessionSigs) {
-          setAuthMethod(JSON.parse(storedAuthMethod));
-          setPKPState(JSON.parse(storedPKP));
-          setSessionSigsState(JSON.parse(storedSessionSigs));
-          setIsAuthenticated(true);
+          try {
+            setAuthMethod(JSON.parse(storedAuthMethod));
+            setPKPState(JSON.parse(storedPKP));
+            setSessionSigsState(JSON.parse(storedSessionSigs));
+            setIsAuthenticated(true);
+          } catch (e) {
+            console.error('Error parsing stored auth data:', e);
+            // Clear corrupted data
+            localStorage.removeItem('lit-auth-method');
+            localStorage.removeItem('lit-pkp');
+            localStorage.removeItem('lit-session-sigs');
+            setIsAuthenticated(false);
+          }
         } else {
           setIsAuthenticated(false);
         }
@@ -187,24 +198,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      
       const redirectUri = `${window.location.origin}/auth/callback/google`;
-      const result = await authenticateWithGoogle(redirectUri);
-      
-      const pkps = await getPKPs(result);
-      
+      await signInWithGoogle(redirectUri);
+    } catch (err) {
+      console.error('Error signing in with Google:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Handle Google auth callback
+  const handleGoogleCallback = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const redirectUri = `${window.location.origin}/auth/callback/google`;
+      const authMethod = await authenticateWithGoogle(redirectUri);
+      const pkps = await getPKPs(authMethod);
+
       if (pkps.length === 0) {
-        setError(new Error('No PKP found. Please sign up first.'));
-        return;
+        // If no PKP, mint one
+        const newPkp = await mintPKP(authMethod);
+        await updateSession(newPkp, authMethod);
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result);
+        await updateSession(pkps[0], authMethod);
       } else {
         setAvailablePkps(pkps);
-        setCurrentAuthMethodForPkpSelection(result);
+        setCurrentAuthMethodForPkpSelection(authMethod);
         setPendingPkpSelection(true);
       }
     } catch (err) {
-      console.error('Error logging in with Google:', err);
+      console.error('Error handling Google callback:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setIsLoading(false);
@@ -216,24 +240,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      
       const redirectUri = `${window.location.origin}/auth/callback/discord`;
-      const result = await authenticateWithDiscord(redirectUri);
-      
-      const pkps = await getPKPs(result);
-      
+      await signInWithDiscord(redirectUri);
+    } catch (err) {
+      console.error('Error signing in with Discord:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Handle Discord auth callback
+  const handleDiscordCallback = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const redirectUri = `${window.location.origin}/auth/callback/discord`;
+      const authMethod = await authenticateWithDiscord(redirectUri);
+      const pkps = await getPKPs(authMethod);
+
       if (pkps.length === 0) {
-        setError(new Error('No PKP found. Please sign up first.'));
-        return;
+        // If no PKP, mint one
+        const newPkp = await mintPKP(authMethod);
+        await updateSession(newPkp, authMethod);
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result);
+        await updateSession(pkps[0], authMethod);
       } else {
         setAvailablePkps(pkps);
-        setCurrentAuthMethodForPkpSelection(result);
+        setCurrentAuthMethodForPkpSelection(authMethod);
         setPendingPkpSelection(true);
       }
     } catch (err) {
-      console.error('Error logging in with Discord:', err);
+      console.error('Error handling Discord callback:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setIsLoading(false);
@@ -369,7 +406,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         availablePkps,
         currentAuthMethodForPkpSelection,
         loginWithGoogle,
+        handleGoogleCallback,
         loginWithDiscord,
+        handleDiscordCallback,
         loginWithWebAuthn,
         loginWithEthWallet,
         loginWithStytchOtp,
