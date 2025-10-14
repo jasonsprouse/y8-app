@@ -10,7 +10,7 @@ import {
 
 export default function DiscordCallbackPage() {
   const router = useRouter();
-  const { loginWithDiscord, isAuthenticated, error } = useAuth();
+  const { loginWithDiscord, isAuthenticated, needsToCreateAccount, error } = useAuth();
   const [isProcessing, setIsProcessing] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
@@ -58,8 +58,11 @@ export default function DiscordCallbackPage() {
     if (isAuthenticated) {
       // Redirect to dashboard or home after successful authentication
       router.push('/space');
+    } else if (needsToCreateAccount && !isProcessing) {
+      // Redirect to home page to show create account flow
+      router.push('/');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, needsToCreateAccount, isProcessing, router]);
 
   useEffect(() => {
     if (error) {

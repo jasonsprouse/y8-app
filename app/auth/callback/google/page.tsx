@@ -11,7 +11,7 @@ import {
 function GoogleCallbackContent() {
   const router = useRouter();
   const pathname = usePathname();
-  const { loginWithGoogle, isAuthenticated, error } = useAuth();
+  const { loginWithGoogle, isAuthenticated, needsToCreateAccount, error } = useAuth();
   const [isProcessing, setIsProcessing] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
@@ -58,8 +58,11 @@ function GoogleCallbackContent() {
   useEffect(() => {
     if (isAuthenticated) {
       router.push('/space');
+    } else if (needsToCreateAccount && !isProcessing) {
+      // Redirect to home page to show create account flow
+      router.push('/');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, needsToCreateAccount, isProcessing, router]);
 
   useEffect(() => {
     if (error) {
