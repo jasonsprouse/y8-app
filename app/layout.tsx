@@ -8,9 +8,6 @@ import NotificationBar from '../components/ui/NotificationBar';
 import RouteGuard from '../components/RouteGuard';
 import '../styles/globals.css';
 
-// Use system fonts as fallback
-const fontVariables = '--font-poppins: ui-sans-serif, system-ui, sans-serif; --font-inter: ui-sans-serif, system-ui, sans-serif;';
-
 export const metadata: Metadata = {
   title: {
     default: 'Home | Y8',
@@ -28,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" style={{ fontVariables } as React.CSSProperties}>
+    <html lang="en" style={{ '--font-poppins': 'ui-sans-serif, system-ui, sans-serif', '--font-inter': 'ui-sans-serif, system-ui, sans-serif' } as React.CSSProperties}>
       <body>
         <Providers>
           <NotificationBar />
