@@ -122,6 +122,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError(null);
       
+      console.log('Updating session with PKP:', {
+        ethAddress: newPKP.ethAddress,
+        authMethodType: newAuthMethod.authMethodType,
+        shouldRedirect,
+        currentPath: pathname
+      });
+      
       const sessionSigsResult = await getSessionSigs({
         pkpPublicKey: newPKP.publicKey,
         authMethod: newAuthMethod,
@@ -144,6 +151,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
       
+      console.log('Session signatures obtained successfully');
+      
       setPKPState(newPKP);
       setAuthMethod(newAuthMethod);
       setSessionSigsState(sessionSigsResult);
@@ -156,8 +165,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('lit-pkp', JSON.stringify(newPKP));
       localStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigsResult));
       
+      console.log('Authentication state updated, isAuthenticated: true');
+      
       // Redirect to /space after successful login if not from a callback page
       if (shouldRedirect && pathname === '/') {
+        console.log('Redirecting to /space');
         router.push('/space');
       }
       
@@ -206,18 +218,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await authenticateWithGoogle(window.location.href);
       
       const pkps = await getPKPs(result);
+      console.log('Google login - PKPs retrieved:', pkps.length);
       
-      if (pkps.length === 0) {
+      if (!pkps || pkps.length === 0) {
+        console.warn('No PKPs found for Google auth method');
         setError(new Error('No PKP found. Please sign up first.'));
+        setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
         // Don't redirect from callback - callback page handles redirect
         const isCallbackPage = pathname.startsWith('/auth/callback');
         await updateSession(pkps[0], result, !isCallbackPage);
       } else {
+        console.log('Multiple PKPs found, showing selection');
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
         setPendingPkpSelection(true);
+        setIsLoading(false);
       }
     } catch (err) {
       if (err instanceof Error && err.message === 'Redirecting to Google...') {
@@ -225,7 +242,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       console.error('Error logging in with Google:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
       setIsLoading(false);
     }
   }, [updateSession, pathname]);
@@ -247,23 +263,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await authenticateWithDiscord(window.location.href);
       
       const pkps = await getPKPs(result);
+      console.log('Discord login - PKPs retrieved:', pkps.length);
       
-      if (pkps.length === 0) {
+      if (!pkps || pkps.length === 0) {
+        console.warn('No PKPs found for Discord auth method');
         setError(new Error('No PKP found. Please sign up first.'));
+        setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
         // Don't redirect from callback - callback page handles redirect
         const isCallbackPage = pathname.startsWith('/auth/callback');
         await updateSession(pkps[0], result, !isCallbackPage);
       } else {
+        console.log('Multiple PKPs found, showing selection');
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
         setPendingPkpSelection(true);
+        setIsLoading(false);
       }
     } catch (err) {
       console.error('Error logging in with Discord:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
       setIsLoading(false);
     }
   }, [updateSession, pathname]);
@@ -276,22 +296,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const result = await authenticateWithWebAuthn();
       const pkps = await getPKPs(result);
+      console.log('WebAuthn login - PKPs retrieved:', pkps.length);
       
-      if (pkps.length === 0) {
+      if (!pkps || pkps.length === 0) {
+        console.warn('No PKPs found for WebAuthn auth method');
         setError(new Error('No PKP found. Please register first.'));
+        setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
         // Redirect to /space after successful login from main page
         await updateSession(pkps[0], result, pathname === '/');
       } else {
+        console.log('Multiple PKPs found, showing selection');
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
         setPendingPkpSelection(true);
+        setIsLoading(false);
       }
     } catch (err) {
       console.error('Error logging in with WebAuthn:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
       setIsLoading(false);
     }
   }, [updateSession, pathname]);
@@ -304,22 +328,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const result = await authenticateWithEthWallet();
       const pkps = await getPKPs(result);
+      console.log('Ethereum Wallet login - PKPs retrieved:', pkps.length);
       
-      if (pkps.length === 0) {
+      if (!pkps || pkps.length === 0) {
+        console.warn('No PKPs found for Ethereum Wallet auth method');
         setError(new Error('No PKP found. Please sign up first.'));
+        setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
         // Redirect to /space after successful login from main page
         await updateSession(pkps[0], result, pathname === '/');
       } else {
+        console.log('Multiple PKPs found, showing selection');
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
         setPendingPkpSelection(true);
+        setIsLoading(false);
       }
     } catch (err) {
       console.error('Error logging in with wallet:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
       setIsLoading(false);
     }
   }, [updateSession, pathname]);
@@ -332,22 +360,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const result = await authenticateWithStytch(method);
       const pkps = await getPKPs(result);
+      console.log('Stytch OTP login - PKPs retrieved:', pkps.length);
       
-      if (pkps.length === 0) {
+      if (!pkps || pkps.length === 0) {
+        console.warn('No PKPs found for Stytch auth method');
         setError(new Error('No PKP found. Please sign up first.'));
+        setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
         // Redirect to /space after successful login from main page
         await updateSession(pkps[0], result, pathname === '/');
       } else {
+        console.log('Multiple PKPs found, showing selection');
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
         setPendingPkpSelection(true);
+        setIsLoading(false);
       }
     } catch (err) {
       console.error('Error logging in with Stytch:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
       setIsLoading(false);
     }
   }, [updateSession, pathname]);

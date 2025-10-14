@@ -296,9 +296,23 @@ import {
    * Fetch PKPs associated with given auth method
    */
   export async function getPKPs(authMethod: AuthMethod): Promise<IRelayPKP[]> {
-    const provider = getAuthenticatedProvider(authMethod);
-    const allPKPs = await provider.fetchPKPsThroughRelayer(authMethod);
-    return allPKPs;
+    try {
+      const provider = getAuthenticatedProvider(authMethod);
+      console.log('Fetching PKPs for auth method:', authMethod.authMethodType);
+      const allPKPs = await provider.fetchPKPsThroughRelayer(authMethod);
+      console.log('PKPs fetched successfully:', allPKPs);
+      
+      // Ensure we return an array
+      if (!Array.isArray(allPKPs)) {
+        console.error('PKPs response is not an array:', allPKPs);
+        return [];
+      }
+      
+      return allPKPs;
+    } catch (error) {
+      console.error('Error fetching PKPs:', error);
+      throw error;
+    }
   }
   
   /**
