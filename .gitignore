@@ -52,3 +52,6 @@ yarn-error.log*
 .turbo
 .vercel
 .next/
+
+# TypeScript build cache
+*.tsbuildinfo

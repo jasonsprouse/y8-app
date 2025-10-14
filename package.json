@@ -1,6 +1,6 @@
 {
   "name": "y8-app",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "y8 app",
   "main": "index.js",
   "scripts": {
@@ -20,6 +20,7 @@
     "@lit-protocol/pkp-ethers": "^7.1.1",
     "@lit-protocol/types": "^7.1.1",
     "@radix-ui/react-radio-group": "^1.3.8",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@simplewebauthn/browser": "^13.1.0",
     "@spruceid/siwe-parser": "3.0.0",
     "@stytch/nextjs": "^21.4.4",
@@ -29,6 +30,7 @@
     "ethers": "6.13.6",
     "framer-motion": "^12.6.3",
     "next": "^15.2.4",
+    "pino-pretty": "^13.1.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.5.2",

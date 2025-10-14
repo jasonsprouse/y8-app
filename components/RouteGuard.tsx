@@ -7,14 +7,29 @@ import { useAuth } from '../context/AuthContext';
 // Define public paths that don't require authentication
 const publicPaths = ['/'];
 
+// Helper function to check if a path is public or an auth path
+const isPublicOrAuthPath = (pathname: string): boolean => {
+  // Check exact public paths
+  if (publicPaths.includes(pathname)) {
+    return true;
+  }
+  
+  // Check if it's an auth path (starts with /auth)
+  if (pathname.startsWith('/auth')) {
+    return true;
+  }
+  
+  return false;
+};
+
 export default function RouteGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    // Skip check for public paths
-    if (publicPaths.includes(pathname)) {
+    // Skip check for public paths and auth paths
+    if (isPublicOrAuthPath(pathname)) {
       return;
     }
 
@@ -24,8 +39,8 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
     }
   }, [isAuthenticated, isLoading, pathname, router]);
 
-  // Always render children for public paths
-  if (publicPaths.includes(pathname)) {
+  // Always render children for public paths and auth paths
+  if (isPublicOrAuthPath(pathname)) {
     return <>{children}</>;
   }
 
