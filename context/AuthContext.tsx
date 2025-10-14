@@ -227,10 +227,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Google login - PKPs retrieved:', pkps.length);
       
       if (!pkps || pkps.length === 0) {
-        console.warn('No PKPs found for Google auth method, user needs to create account');
+        console.log('No PKPs found for Google auth method, showing account creation flow');
         setCurrentAuthMethodForPkpSelection(result);
         setNeedsToCreateAccount(true);
-        setError(new Error('No PKP found. Please create an account first.'));
+        setError(null); // Clear any previous errors
         setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
@@ -274,10 +274,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Discord login - PKPs retrieved:', pkps.length);
       
       if (!pkps || pkps.length === 0) {
-        console.warn('No PKPs found for Discord auth method, user needs to create account');
+        console.log('No PKPs found for Discord auth method, showing account creation flow');
         setCurrentAuthMethodForPkpSelection(result);
         setNeedsToCreateAccount(true);
-        setError(new Error('No PKP found. Please create an account first.'));
+        setError(null); // Clear any previous errors
         setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
@@ -309,10 +309,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('WebAuthn login - PKPs retrieved:', pkps.length);
       
       if (!pkps || pkps.length === 0) {
-        console.warn('No PKPs found for WebAuthn auth method, user needs to create account');
+        console.log('No PKPs found for WebAuthn auth method, showing account creation flow');
         setCurrentAuthMethodForPkpSelection(result);
         setNeedsToCreateAccount(true);
-        setError(new Error('No PKP found. Please create an account first.'));
+        setError(null); // Clear any previous errors
         setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
@@ -343,10 +343,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Ethereum Wallet login - PKPs retrieved:', pkps.length);
       
       if (!pkps || pkps.length === 0) {
-        console.warn('No PKPs found for Ethereum Wallet auth method, user needs to create account');
+        console.log('No PKPs found for Ethereum Wallet auth method, showing account creation flow');
         setCurrentAuthMethodForPkpSelection(result);
         setNeedsToCreateAccount(true);
-        setError(new Error('No PKP found. Please create an account first.'));
+        setError(null); // Clear any previous errors
         setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
@@ -377,10 +377,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Stytch OTP login - PKPs retrieved:', pkps.length);
       
       if (!pkps || pkps.length === 0) {
-        console.warn('No PKPs found for Stytch auth method, user needs to create account');
+        console.log('No PKPs found for Stytch auth method, showing account creation flow');
         setCurrentAuthMethodForPkpSelection(result);
         setNeedsToCreateAccount(true);
-        setError(new Error('No PKP found. Please create an account first.'));
+        setError(null); // Clear any previous errors
         setIsLoading(false);
         return;
       } else if (pkps.length === 1) {

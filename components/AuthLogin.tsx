@@ -64,7 +64,7 @@ export default function AuthLogin() {
             clearNeedsToCreateAccount();
             setAuthView('signup');
           }}
-          error={error}
+          error={undefined}
         />
       </div>
     );
