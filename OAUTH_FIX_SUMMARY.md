@@ -128,11 +128,19 @@ node validate-auth.js
 
 ## Testing Recommendations
 
+### Happy Path Testing
 1. **Clear localStorage** before testing: `localStorage.clear()`
 2. **Test OAuth Flow**: Click "Continue with Google" and complete OAuth
 3. **Verify Auth State**: Check localStorage has `lit-auth-method`, `lit-pkp`, `lit-session-sigs`
 4. **Verify Redirect**: Should redirect to `/space` after successful auth
 5. **Test Session Persistence**: Refresh page, should remain authenticated
+
+### Failure Scenario Testing
+1. **Test Denied Authentication**: Cancel OAuth consent → Should show error, not crash
+2. **Test Invalid Callback URL**: Navigate to callback URL without params → Should show appropriate error
+3. **Test Invalid Provider**: Manually modify provider in URL → Should be caught by `getProviderFromUrl()` validation
+4. **Test Network Failure**: Disconnect network during OAuth → Should handle gracefully with error message
+5. **Test Expired Code**: Try to reuse an old callback URL → Should fail gracefully with error message
 
 ## Related Files
 - `app/auth/callback/google/page.tsx` - Google OAuth callback handler
