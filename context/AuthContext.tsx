@@ -35,6 +35,7 @@ interface AuthContextType {
   pendingPkpSelection: boolean;
   availablePkps: IRelayPKP[] | null;
   currentAuthMethodForPkpSelection: AuthMethod | null;
+  needsToCreateAccount: boolean;
   
   // Auth methods
   loginWithGoogle: () => Promise<void>;
@@ -46,6 +47,7 @@ interface AuthContextType {
   logOut: () => void;
   setPKP: (pkp: IRelayPKP) => void;
   setSessionSigs: (sessionSigs: SessionSigs) => void;
+  clearNeedsToCreateAccount: () => void;
 }
 
 // Create context with default values
@@ -59,6 +61,7 @@ const AuthContext = createContext<AuthContextType>({
   pendingPkpSelection: false,
   availablePkps: null,
   currentAuthMethodForPkpSelection: null,
+  needsToCreateAccount: false,
   
   loginWithGoogle: async () => {},
   loginWithDiscord: async () => {},
@@ -69,6 +72,7 @@ const AuthContext = createContext<AuthContextType>({
   logOut: () => {},
   setPKP: () => {},
   setSessionSigs: () => {},
+  clearNeedsToCreateAccount: () => {},
 });
 
 // Auth Provider component
@@ -82,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [pendingPkpSelection, setPendingPkpSelection] = useState<boolean>(false);
   const [availablePkps, setAvailablePkps] = useState<IRelayPKP[] | null>(null);
   const [currentAuthMethodForPkpSelection, setCurrentAuthMethodForPkpSelection] = useState<AuthMethod | null>(null);
+  const [needsToCreateAccount, setNeedsToCreateAccount] = useState<boolean>(false);
   
   const router = useRouter();
   const pathname = usePathname();
@@ -122,6 +127,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError(null);
       
+      console.log('Updating session with PKP:', {
+        ethAddress: newPKP.ethAddress,
+        authMethodType: newAuthMethod.authMethodType,
+        shouldRedirect,
+        currentPath: pathname
+      });
+      
       const sessionSigsResult = await getSessionSigs({
         pkpPublicKey: newPKP.publicKey,
         authMethod: newAuthMethod,
@@ -144,6 +156,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
       
+      console.log('Session signatures obtained successfully');
+      
       setPKPState(newPKP);
       setAuthMethod(newAuthMethod);
       setSessionSigsState(sessionSigsResult);
@@ -151,14 +165,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPendingPkpSelection(false);
       setAvailablePkps(null);
       setCurrentAuthMethodForPkpSelection(null);
+      setNeedsToCreateAccount(false);
       
       localStorage.setItem('lit-auth-method', JSON.stringify(newAuthMethod));
       localStorage.setItem('lit-pkp', JSON.stringify(newPKP));
       localStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigsResult));
       
-      // Redirect to /space after successful login if not from a callback page
+      console.log('Authentication state updated, isAuthenticated: true');
+      
+      // Redirect to / after successful login if not from a callback page
       if (shouldRedirect && pathname === '/') {
-        router.push('/space');
+        console.log('Redirecting to /');
+        router.push('/');
       }
       
       return { pkp: newPKP, sessionSigs: sessionSigsResult };
@@ -180,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setIsLoading(true);
-      // Redirect to /space after PKP selection from main page
+      // Redirect to / after PKP selection from main page
       const isCallbackPage = pathname.startsWith('/auth/callback');
       await updateSession(selectedPkp, currentAuthMethodForPkpSelection, !isCallbackPage && pathname === '/');
     } catch (err) {
@@ -206,18 +224,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await authenticateWithGoogle(window.location.href);
       
       const pkps = await getPKPs(result);
+      console.log('Google login - PKPs retrieved:', pkps.length);
       
-      if (pkps.length === 0) {
-        setError(new Error('No PKP found. Please sign up first.'));
+      if (!pkps || pkps.length === 0) {
+        console.log('No PKPs found for Google auth method, minting a new one...');
+        try {
+          const newPkp = await mintPKP(result);
+          console.log('New PKP minted:', newPkp);
+          const isCallbackPage = pathname.startsWith('/auth/callback');
+          await updateSession(newPkp, result, !isCallbackPage);
+        } catch (mintErr) {
+          console.error('Error minting PKP:', mintErr);
+          setError(mintErr instanceof Error ? mintErr : new Error(String(mintErr)));
+          setIsLoading(false);
+        }
         return;
       } else if (pkps.length === 1) {
         // Don't redirect from callback - callback page handles redirect
         const isCallbackPage = pathname.startsWith('/auth/callback');
         await updateSession(pkps[0], result, !isCallbackPage);
       } else {
+        console.log('Multiple PKPs found, showing selection');
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
         setPendingPkpSelection(true);
+        setIsLoading(false);
       }
     } catch (err) {
       if (err instanceof Error && err.message === 'Redirecting to Google...') {
@@ -225,7 +256,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       console.error('Error logging in with Google:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
       setIsLoading(false);
     }
   }, [updateSession, pathname]);
@@ -247,23 +277,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await authenticateWithDiscord(window.location.href);
       
       const pkps = await getPKPs(result);
+      console.log('Discord login - PKPs retrieved:', pkps.length);
       
-      if (pkps.length === 0) {
-        setError(new Error('No PKP found. Please sign up first.'));
+      if (!pkps || pkps.length === 0) {
+        console.log('No PKPs found for Discord auth method, minting a new one...');
+        try {
+          const newPkp = await mintPKP(result);
+          console.log('New PKP minted:', newPkp);
+          const isCallbackPage = pathname.startsWith('/auth/callback');
+          await updateSession(newPkp, result, !isCallbackPage);
+        } catch (mintErr) {
+          console.error('Error minting PKP:', mintErr);
+          setError(mintErr instanceof Error ? mintErr : new Error(String(mintErr)));
+          setIsLoading(false);
+        }
         return;
       } else if (pkps.length === 1) {
         // Don't redirect from callback - callback page handles redirect
         const isCallbackPage = pathname.startsWith('/auth/callback');
         await updateSession(pkps[0], result, !isCallbackPage);
       } else {
+        console.log('Multiple PKPs found, showing selection');
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
         setPendingPkpSelection(true);
+        setIsLoading(false);
       }
     } catch (err) {
       console.error('Error logging in with Discord:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
       setIsLoading(false);
     }
   }, [updateSession, pathname]);
@@ -276,22 +318,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const result = await authenticateWithWebAuthn();
       const pkps = await getPKPs(result);
+      console.log('WebAuthn login - PKPs retrieved:', pkps.length);
       
-      if (pkps.length === 0) {
-        setError(new Error('No PKP found. Please register first.'));
+      if (!pkps || pkps.length === 0) {
+        console.log('No PKPs found for WebAuthn auth method, minting a new one...');
+        try {
+          const newPkp = await mintPKP(result);
+          console.log('New PKP minted:', newPkp);
+          await updateSession(newPkp, result, pathname === '/');
+        } catch (mintErr) {
+          console.error('Error minting PKP:', mintErr);
+          setError(mintErr instanceof Error ? mintErr : new Error(String(mintErr)));
+          setIsLoading(false);
+        }
         return;
       } else if (pkps.length === 1) {
-        // Redirect to /space after successful login from main page
+        // Redirect to / after successful login from main page
         await updateSession(pkps[0], result, pathname === '/');
       } else {
+        console.log('Multiple PKPs found, showing selection');
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
         setPendingPkpSelection(true);
+        setIsLoading(false);
       }
     } catch (err) {
       console.error('Error logging in with WebAuthn:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
       setIsLoading(false);
     }
   }, [updateSession, pathname]);
@@ -304,22 +357,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const result = await authenticateWithEthWallet();
       const pkps = await getPKPs(result);
+      console.log('Ethereum Wallet login - PKPs retrieved:', pkps.length);
       
-      if (pkps.length === 0) {
-        setError(new Error('No PKP found. Please sign up first.'));
+      if (!pkps || pkps.length === 0) {
+        console.log('No PKPs found for Ethereum Wallet auth method, minting a new one...');
+        try {
+          const newPkp = await mintPKP(result);
+          console.log('New PKP minted:', newPkp);
+          await updateSession(newPkp, result, pathname === '/');
+        } catch (mintErr) {
+          console.error('Error minting PKP:', mintErr);
+          setError(mintErr instanceof Error ? mintErr : new Error(String(mintErr)));
+          setIsLoading(false);
+        }
         return;
       } else if (pkps.length === 1) {
-        // Redirect to /space after successful login from main page
+        // Redirect to / after successful login from main page
         await updateSession(pkps[0], result, pathname === '/');
       } else {
+        console.log('Multiple PKPs found, showing selection');
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
         setPendingPkpSelection(true);
+        setIsLoading(false);
       }
     } catch (err) {
       console.error('Error logging in with wallet:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
       setIsLoading(false);
     }
   }, [updateSession, pathname]);
@@ -332,22 +396,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const result = await authenticateWithStytch(method);
       const pkps = await getPKPs(result);
+      console.log('Stytch OTP login - PKPs retrieved:', pkps.length);
       
-      if (pkps.length === 0) {
-        setError(new Error('No PKP found. Please sign up first.'));
+      if (!pkps || pkps.length === 0) {
+        console.log('No PKPs found for Stytch auth method, minting a new one...');
+        try {
+          const newPkp = await mintPKP(result);
+          console.log('New PKP minted:', newPkp);
+          await updateSession(newPkp, result, pathname === '/');
+        } catch (mintErr) {
+          console.error('Error minting PKP:', mintErr);
+          setError(mintErr instanceof Error ? mintErr : new Error(String(mintErr)));
+          setIsLoading(false);
+        }
         return;
       } else if (pkps.length === 1) {
-        // Redirect to /space after successful login from main page
+        // Redirect to / after successful login from main page
         await updateSession(pkps[0], result, pathname === '/');
       } else {
+        console.log('Multiple PKPs found, showing selection');
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
         setPendingPkpSelection(true);
+        setIsLoading(false);
       }
     } catch (err) {
       console.error('Error logging in with Stytch:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
       setIsLoading(false);
     }
   }, [updateSession, pathname]);
@@ -360,7 +435,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const newPKP = await litRegisterWebAuthn();
       const authMethodResult: AuthMethod = await authenticateWithWebAuthn();
-      // Redirect to /space after successful registration from main page
+      // Redirect to / after successful registration from main page
       await updateSession(newPKP, authMethodResult, pathname === '/');
     } catch (err) {
       console.error('Error registering with WebAuthn:', err);
@@ -369,6 +444,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }
   }, [updateSession, pathname]);
+
+  // Clear needs to create account flag
+  const clearNeedsToCreateAccount = useCallback(() => {
+    setNeedsToCreateAccount(false);
+    setError(null);
+  }, []);
 
   // Logout
   const logOut = useCallback(() => {
@@ -380,6 +461,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPendingPkpSelection(false);
     setAvailablePkps(null);
     setCurrentAuthMethodForPkpSelection(null);
+    setNeedsToCreateAccount(false);
     
     localStorage.removeItem('lit-auth-method');
     localStorage.removeItem('lit-pkp');
@@ -400,6 +482,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         pendingPkpSelection,
         availablePkps,
         currentAuthMethodForPkpSelection,
+        needsToCreateAccount,
         loginWithGoogle,
         loginWithDiscord,
         loginWithWebAuthn,
@@ -409,6 +492,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logOut,
         setPKP,
         setSessionSigs: setSessionSigsState,
+        clearNeedsToCreateAccount,
       }}
     >
       {children}
