@@ -117,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Update session with PKP and auth method
-  const updateSession = useCallback(async (newPKP: IRelayPKP, newAuthMethod: AuthMethod) => {
+  const updateSession = useCallback(async (newPKP: IRelayPKP, newAuthMethod: AuthMethod, shouldRedirect: boolean = false) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -156,6 +156,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('lit-pkp', JSON.stringify(newPKP));
       localStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigsResult));
       
+      // Redirect to /space after successful login if not from a callback page
+      if (shouldRedirect && pathname === '/') {
+        router.push('/space');
+      }
+      
       return { pkp: newPKP, sessionSigs: sessionSigsResult };
     } catch (err) {
       console.error('Error updating session:', err);
@@ -164,7 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [pathname, router]);
 
   // Set PKP (handles selection from multiple PKPs)
   const setPKP = useCallback(async (selectedPkp: IRelayPKP) => {
@@ -175,12 +180,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setIsLoading(true);
-      await updateSession(selectedPkp, currentAuthMethodForPkpSelection);
+      // Redirect to /space after PKP selection from main page
+      const isCallbackPage = pathname.startsWith('/auth/callback');
+      await updateSession(selectedPkp, currentAuthMethodForPkpSelection, !isCallbackPage && pathname === '/');
     } catch (err) {
       console.error('Error selecting PKP:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     }
-  }, [currentAuthMethodForPkpSelection, updateSession]);
+  }, [currentAuthMethodForPkpSelection, updateSession, pathname]);
 
   // Login with Google
   const loginWithGoogle = useCallback(async () => {
@@ -197,7 +204,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(new Error('No PKP found. Please sign up first.'));
         return;
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result);
+        // Don't redirect from callback - callback page handles redirect
+        const isCallbackPage = pathname.startsWith('/auth/callback');
+        await updateSession(pkps[0], result, !isCallbackPage);
       } else {
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
@@ -209,7 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [updateSession]);
+  }, [updateSession, pathname]);
 
   // Login with Discord
   const loginWithDiscord = useCallback(async () => {
@@ -226,7 +235,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(new Error('No PKP found. Please sign up first.'));
         return;
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result);
+        // Don't redirect from callback - callback page handles redirect
+        const isCallbackPage = pathname.startsWith('/auth/callback');
+        await updateSession(pkps[0], result, !isCallbackPage);
       } else {
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
@@ -238,7 +249,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [updateSession]);
+  }, [updateSession, pathname]);
 
   // Login with WebAuthn
   const loginWithWebAuthn = useCallback(async () => {
@@ -253,7 +264,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(new Error('No PKP found. Please register first.'));
         return;
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result);
+        // Redirect to /space after successful login from main page
+        await updateSession(pkps[0], result, pathname === '/');
       } else {
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
@@ -265,7 +277,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [updateSession]);
+  }, [updateSession, pathname]);
 
   // Login with Ethereum Wallet
   const loginWithEthWallet = useCallback(async () => {
@@ -280,7 +292,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(new Error('No PKP found. Please sign up first.'));
         return;
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result);
+        // Redirect to /space after successful login from main page
+        await updateSession(pkps[0], result, pathname === '/');
       } else {
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
@@ -292,7 +305,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [updateSession]);
+  }, [updateSession, pathname]);
 
   // Login with Stytch OTP
   const loginWithStytchOtp = useCallback(async (method: 'email' | 'phone') => {
@@ -307,7 +320,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setError(new Error('No PKP found. Please sign up first.'));
         return;
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result);
+        // Redirect to /space after successful login from main page
+        await updateSession(pkps[0], result, pathname === '/');
       } else {
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
@@ -319,7 +333,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [updateSession]);
+  }, [updateSession, pathname]);
 
   // Register with WebAuthn
   const registerWebAuthn = useCallback(async () => {
@@ -329,14 +343,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const newPKP = await litRegisterWebAuthn();
       const authMethodResult: AuthMethod = await authenticateWithWebAuthn();
-      await updateSession(newPKP, authMethodResult);
+      // Redirect to /space after successful registration from main page
+      await updateSession(newPKP, authMethodResult, pathname === '/');
     } catch (err) {
       console.error('Error registering with WebAuthn:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setIsLoading(false);
     }
-  }, [updateSession]);
+  }, [updateSession, pathname]);
 
   // Logout
   const logOut = useCallback(() => {
