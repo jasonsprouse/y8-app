@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { Poppins, Inter } from 'next/font/google';
 import Providers from '../components/Providers';
 import Header from '../components/ui/Header';
 import Navbar from '../components/ui/Navbar';
@@ -9,18 +8,8 @@ import NotificationBar from '../components/ui/NotificationBar';
 import RouteGuard from '../components/RouteGuard';
 import '../styles/globals.css';
 
-// Configure fonts
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-poppins',
-});
-
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-inter',
-});
+// Use system fonts as fallback
+const fontVariables = '--font-poppins: ui-sans-serif, system-ui, sans-serif; --font-inter: ui-sans-serif, system-ui, sans-serif;';
 
 export const metadata: Metadata = {
   title: {
@@ -39,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
+    <html lang="en" style={{ fontVariables } as React.CSSProperties}>
       <body>
         <Providers>
           <NotificationBar />
