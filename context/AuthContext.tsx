@@ -194,8 +194,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const redirectUri = `${window.location.origin}/auth/callback/google`;
+
+      if (window.location.pathname !== '/auth/callback/google') {
+        await signInWithGoogle(redirectUri);
+        return;
+      }
+
       const result = await authenticateWithGoogle(redirectUri);
       
       const pkps = await getPKPs(result);
@@ -213,6 +219,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setPendingPkpSelection(true);
       }
     } catch (err) {
+      if (err instanceof Error && err.message === 'Redirecting to Google...') {
+        return;
+      }
       console.error('Error logging in with Google:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {

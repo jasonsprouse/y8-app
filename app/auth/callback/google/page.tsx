@@ -1,62 +1,48 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../../context/AuthContext';
-import {
-  isSignInRedirect,
-  getProviderFromUrl,
-} from '@lit-protocol/lit-auth-client';
 
 export default function GoogleCallbackPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
   const { loginWithGoogle, isAuthenticated, error } = useAuth();
   const [isProcessing, setIsProcessing] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
 
   useEffect(() => {
-    const handleCallback = async () => {
-      // Prevent multiple authentication attempts
-      if (hasAttemptedAuth) {
-        return;
-      }
-      
-      setHasAttemptedAuth(true);
-      
-      try {
-        // Check if this is a valid OAuth redirect
-        const redirectUri = window.location.href;
-        
-        if (!isSignInRedirect(redirectUri)) {
-          setAuthError('Invalid OAuth redirect');
-          setIsProcessing(false);
-          return;
-        }
+    if (pathname !== '/auth/callback/google') return;
+    if (hasAttemptedAuth || isAuthenticated) return;
 
-        const provider = getProviderFromUrl();
-        if (provider !== 'google') {
-          setAuthError('Invalid provider');
-          setIsProcessing(false);
-          return;
-        }
+    const code = params.get('code');
+    const err = params.get('error');
 
-        // Authenticate with Google
-        await loginWithGoogle();
-        
-      } catch (err) {
-        console.error('Error during Google callback:', err);
-        setAuthError(err instanceof Error ? err.message : 'Authentication failed');
-        setIsProcessing(false);
-      }
-    };
+    if (err) {
+      setAuthError('Google authentication was cancelled.');
+      setIsProcessing(false);
+      return;
+    }
 
-    handleCallback();
-  }, [hasAttemptedAuth, loginWithGoogle]);
+    if (!code) {
+      setAuthError('Missing authorization code.');
+      setIsProcessing(false);
+      return;
+    }
+
+    setHasAttemptedAuth(true);
+
+    loginWithGoogle().catch((caught) => {
+      console.error('Error during Google callback:', caught);
+      setAuthError(caught instanceof Error ? caught.message : 'Authentication failed');
+      setIsProcessing(false);
+    });
+  }, [pathname, params, isAuthenticated, hasAttemptedAuth, loginWithGoogle]);
 
   useEffect(() => {
     if (isAuthenticated) {
-      // Redirect to dashboard or home after successful authentication
       router.push('/space');
     }
   }, [isAuthenticated, router]);
@@ -75,14 +61,18 @@ export default function GoogleCallbackPage() {
           <h2>Authentication Error</h2>
           <p>{authError}</p>
         </div>
-        <button 
-          onClick={() => router.push('/auth')} 
+        <button
+          onClick={() => router.push('/auth')}
           className="btn btn--primary"
         >
           Back to Login
         </button>
       </div>
     );
+  }
+
+  if (!isProcessing) {
+    return null;
   }
 
   return (
