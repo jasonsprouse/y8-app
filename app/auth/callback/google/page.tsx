@@ -92,8 +92,8 @@ export default function GoogleCallbackPage() {
       <div className="container" style={{ padding: '2rem', textAlign: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          <h2>Loading...</h2>
-          <p>Please wait...</p>
+          <h2>Authenticating with Google...</h2>
+          <p>Please wait while we complete your sign in.</p>
         </div>
       </div>
     }>
