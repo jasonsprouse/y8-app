@@ -35,6 +35,7 @@ interface AuthContextType {
   pendingPkpSelection: boolean;
   availablePkps: IRelayPKP[] | null;
   currentAuthMethodForPkpSelection: AuthMethod | null;
+  needsToCreateAccount: boolean;
   
   // Auth methods
   loginWithGoogle: () => Promise<void>;
@@ -46,6 +47,7 @@ interface AuthContextType {
   logOut: () => void;
   setPKP: (pkp: IRelayPKP) => void;
   setSessionSigs: (sessionSigs: SessionSigs) => void;
+  clearNeedsToCreateAccount: () => void;
 }
 
 // Create context with default values
@@ -59,6 +61,7 @@ const AuthContext = createContext<AuthContextType>({
   pendingPkpSelection: false,
   availablePkps: null,
   currentAuthMethodForPkpSelection: null,
+  needsToCreateAccount: false,
   
   loginWithGoogle: async () => {},
   loginWithDiscord: async () => {},
@@ -69,6 +72,7 @@ const AuthContext = createContext<AuthContextType>({
   logOut: () => {},
   setPKP: () => {},
   setSessionSigs: () => {},
+  clearNeedsToCreateAccount: () => {},
 });
 
 // Auth Provider component
@@ -82,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [pendingPkpSelection, setPendingPkpSelection] = useState<boolean>(false);
   const [availablePkps, setAvailablePkps] = useState<IRelayPKP[] | null>(null);
   const [currentAuthMethodForPkpSelection, setCurrentAuthMethodForPkpSelection] = useState<AuthMethod | null>(null);
+  const [needsToCreateAccount, setNeedsToCreateAccount] = useState<boolean>(false);
   
   const router = useRouter();
   const pathname = usePathname();
@@ -160,6 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPendingPkpSelection(false);
       setAvailablePkps(null);
       setCurrentAuthMethodForPkpSelection(null);
+      setNeedsToCreateAccount(false);
       
       localStorage.setItem('lit-auth-method', JSON.stringify(newAuthMethod));
       localStorage.setItem('lit-pkp', JSON.stringify(newPKP));
@@ -221,8 +227,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Google login - PKPs retrieved:', pkps.length);
       
       if (!pkps || pkps.length === 0) {
-        console.warn('No PKPs found for Google auth method');
-        setError(new Error('No PKP found. Please sign up first.'));
+        console.warn('No PKPs found for Google auth method, user needs to create account');
+        setCurrentAuthMethodForPkpSelection(result);
+        setNeedsToCreateAccount(true);
+        setError(new Error('No PKP found. Please create an account first.'));
         setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
@@ -266,8 +274,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Discord login - PKPs retrieved:', pkps.length);
       
       if (!pkps || pkps.length === 0) {
-        console.warn('No PKPs found for Discord auth method');
-        setError(new Error('No PKP found. Please sign up first.'));
+        console.warn('No PKPs found for Discord auth method, user needs to create account');
+        setCurrentAuthMethodForPkpSelection(result);
+        setNeedsToCreateAccount(true);
+        setError(new Error('No PKP found. Please create an account first.'));
         setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
@@ -299,8 +309,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('WebAuthn login - PKPs retrieved:', pkps.length);
       
       if (!pkps || pkps.length === 0) {
-        console.warn('No PKPs found for WebAuthn auth method');
-        setError(new Error('No PKP found. Please register first.'));
+        console.warn('No PKPs found for WebAuthn auth method, user needs to create account');
+        setCurrentAuthMethodForPkpSelection(result);
+        setNeedsToCreateAccount(true);
+        setError(new Error('No PKP found. Please create an account first.'));
         setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
@@ -331,8 +343,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Ethereum Wallet login - PKPs retrieved:', pkps.length);
       
       if (!pkps || pkps.length === 0) {
-        console.warn('No PKPs found for Ethereum Wallet auth method');
-        setError(new Error('No PKP found. Please sign up first.'));
+        console.warn('No PKPs found for Ethereum Wallet auth method, user needs to create account');
+        setCurrentAuthMethodForPkpSelection(result);
+        setNeedsToCreateAccount(true);
+        setError(new Error('No PKP found. Please create an account first.'));
         setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
@@ -363,8 +377,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Stytch OTP login - PKPs retrieved:', pkps.length);
       
       if (!pkps || pkps.length === 0) {
-        console.warn('No PKPs found for Stytch auth method');
-        setError(new Error('No PKP found. Please sign up first.'));
+        console.warn('No PKPs found for Stytch auth method, user needs to create account');
+        setCurrentAuthMethodForPkpSelection(result);
+        setNeedsToCreateAccount(true);
+        setError(new Error('No PKP found. Please create an account first.'));
         setIsLoading(false);
         return;
       } else if (pkps.length === 1) {
@@ -402,6 +418,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [updateSession, pathname]);
 
+  // Clear needs to create account flag
+  const clearNeedsToCreateAccount = useCallback(() => {
+    setNeedsToCreateAccount(false);
+    setError(null);
+  }, []);
+
   // Logout
   const logOut = useCallback(() => {
     setIsAuthenticated(false);
@@ -412,6 +434,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPendingPkpSelection(false);
     setAvailablePkps(null);
     setCurrentAuthMethodForPkpSelection(null);
+    setNeedsToCreateAccount(false);
     
     localStorage.removeItem('lit-auth-method');
     localStorage.removeItem('lit-pkp');
@@ -432,6 +455,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         pendingPkpSelection,
         availablePkps,
         currentAuthMethodForPkpSelection,
+        needsToCreateAccount,
         loginWithGoogle,
         loginWithDiscord,
         loginWithWebAuthn,
@@ -441,6 +465,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logOut,
         setPKP,
         setSessionSigs: setSessionSigsState,
+        clearNeedsToCreateAccount,
       }}
     >
       {children}
