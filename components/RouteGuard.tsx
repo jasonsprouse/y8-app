@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 // Define public paths that don't require authentication
 const publicPaths = ['/'];
+const authPaths = ['/auth', '/auth/callback/google', '/auth/callback/discord'];
 
 export default function RouteGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -13,8 +14,8 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
 
   useEffect(() => {
-    // Skip check for public paths
-    if (publicPaths.includes(pathname)) {
+    // Skip check for public paths and auth paths
+    if (publicPaths.includes(pathname) || authPaths.includes(pathname)) {
       return;
     }
 
@@ -24,8 +25,8 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
     }
   }, [isAuthenticated, isLoading, pathname, router]);
 
-  // Always render children for public paths
-  if (publicPaths.includes(pathname)) {
+  // Always render children for public paths and auth paths
+  if (publicPaths.includes(pathname) || authPaths.includes(pathname)) {
     return <>{children}</>;
   }
 

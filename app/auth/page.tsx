@@ -5,6 +5,7 @@ import { goerli, mainnet, optimism } from 'wagmi/chains';
 import { coinbaseWallet, metaMask } from 'wagmi/connectors';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Image from 'next/image';
+import { signInWithGoogle, signInWithDiscord } from '../../utils/lit';
 
 // 1. Initialize a QueryClient
 const queryClient = new QueryClient();
@@ -29,6 +30,16 @@ const wagmiConfig = createConfig({
 });
 
 export default function AuthPage() {
+  const handleGoogleLogin = async () => {
+    const redirectUri = `${window.location.origin}/auth/callback/google`;
+    await signInWithGoogle(redirectUri);
+  };
+
+  const handleDiscordLogin = async () => {
+    const redirectUri = `${window.location.origin}/auth/callback/discord`;
+    await signInWithDiscord(redirectUri);
+  };
+
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
@@ -36,7 +47,7 @@ export default function AuthPage() {
           <h1>Authenticate</h1>
           <p>Choose your authentication method</p>
           <div className="buttons-container">
-            <button type="button" className="btn btn--outline">
+            <button type="button" className="btn btn--outline" onClick={handleGoogleLogin}>
               <div className="btn__icon">
                 <Image
                   src="/google.png"
@@ -46,7 +57,7 @@ export default function AuthPage() {
               </div>
               <span className="btn__label">Continue with Google</span>
             </button>
-            <button type="button" className="btn btn--outline">
+            <button type="button" className="btn btn--outline" onClick={handleDiscordLogin}>
               <div className="btn__icon">
                 <Image
                   src="/discord.png"
