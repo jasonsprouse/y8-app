@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import AuthHandler from './AuthHandler';
 
 // Define public paths that don't require authentication
 const publicPaths = ['/', '/about-us', '/shop', '/blog', '/calendar' ];
@@ -41,12 +42,22 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
 
   // Always render children for public paths and auth paths
   if (isPublicOrAuthPath(pathname)) {
-    return <>{children}</>;
+    return (
+      <>
+        <AuthHandler />
+        {children}
+      </>
+    );
   }
 
   // For protected paths, only render if authenticated
   if (isAuthenticated) {
-    return <>{children}</>;
+    return (
+      <>
+        <AuthHandler />
+        {children}
+      </>
+    );
   }
 
   // Show loading state
