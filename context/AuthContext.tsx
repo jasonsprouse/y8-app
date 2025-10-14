@@ -202,7 +202,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const result = await authenticateWithGoogle(redirectUri);
+      // When on callback page, use the full URL with query params for authentication
+      const result = await authenticateWithGoogle(window.location.href);
       
       const pkps = await getPKPs(result);
       
@@ -236,7 +237,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       
       const redirectUri = `${window.location.origin}/auth/callback/discord`;
-      const result = await authenticateWithDiscord(redirectUri);
+
+      if (window.location.pathname !== '/auth/callback/discord') {
+        await signInWithDiscord(redirectUri);
+        return;
+      }
+
+      // When on callback page, use the full URL with query params for authentication
+      const result = await authenticateWithDiscord(window.location.href);
       
       const pkps = await getPKPs(result);
       
