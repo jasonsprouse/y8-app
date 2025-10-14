@@ -44,7 +44,8 @@ export default function DiscordCallbackPage() {
     };
 
     handleCallback();
-  }, [loginWithDiscord]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
