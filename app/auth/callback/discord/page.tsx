@@ -13,9 +13,17 @@ export default function DiscordCallbackPage() {
   const { loginWithDiscord, isAuthenticated, error } = useAuth();
   const [isProcessing, setIsProcessing] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Prevent multiple authentication attempts
+      if (hasAttemptedAuth) {
+        return;
+      }
+      
+      setHasAttemptedAuth(true);
+      
       try {
         // Check if this is a valid OAuth redirect
         const redirectUri = window.location.href;
@@ -44,8 +52,7 @@ export default function DiscordCallbackPage() {
     };
 
     handleCallback();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hasAttemptedAuth, loginWithDiscord]);
 
   useEffect(() => {
     if (isAuthenticated) {
