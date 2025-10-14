@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 
 // Define public paths that don't require authentication
-const publicPaths = ['/'];
+const publicPaths = ['/', '/about-us', '/shop', '/blog', '/calendar' ];
 
 // Helper function to check if a path is public or an auth path
 const isPublicOrAuthPath = (pathname: string): boolean => {
