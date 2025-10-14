@@ -1,45 +1,59 @@
 "use client";
 
 import { useEffect, useState, Suspense } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../../../../context/AuthContext';
+import {
+  isSignInRedirect,
+  getProviderFromUrl,
+} from '@lit-protocol/lit-auth-client';
 
 function GoogleCallbackContent() {
   const router = useRouter();
   const pathname = usePathname();
-  const params = useSearchParams();
   const { loginWithGoogle, isAuthenticated, error } = useAuth();
   const [isProcessing, setIsProcessing] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
 
   useEffect(() => {
-    if (pathname !== '/auth/callback/google') return;
-    if (hasAttemptedAuth || isAuthenticated) return;
+    const handleCallback = async () => {
+      // Prevent multiple authentication attempts
+      if (hasAttemptedAuth) {
+        return;
+      }
+      
+      setHasAttemptedAuth(true);
+      
+      try {
+        // Check if this is a valid OAuth redirect
+        const redirectUri = window.location.href;
+        
+        if (!isSignInRedirect(redirectUri)) {
+          setAuthError('Invalid OAuth redirect');
+          setIsProcessing(false);
+          return;
+        }
 
-    const code = params.get('code');
-    const err = params.get('error');
+        const provider = getProviderFromUrl();
+        if (provider !== 'google') {
+          setAuthError('Invalid provider');
+          setIsProcessing(false);
+          return;
+        }
 
-    if (err) {
-      setAuthError('Google authentication was cancelled.');
-      setIsProcessing(false);
-      return;
-    }
+        // Authenticate with Google
+        await loginWithGoogle();
+        
+      } catch (err) {
+        console.error('Error during Google callback:', err);
+        setAuthError(err instanceof Error ? err.message : 'Authentication failed');
+        setIsProcessing(false);
+      }
+    };
 
-    if (!code) {
-      setAuthError('Missing authorization code.');
-      setIsProcessing(false);
-      return;
-    }
-
-    setHasAttemptedAuth(true);
-
-    loginWithGoogle().catch((caught) => {
-      console.error('Error during Google callback:', caught);
-      setAuthError(caught instanceof Error ? caught.message : 'Authentication failed');
-      setIsProcessing(false);
-    });
-  }, [pathname, params, isAuthenticated, hasAttemptedAuth, loginWithGoogle]);
+    handleCallback();
+  }, [hasAttemptedAuth, loginWithGoogle]);
 
   useEffect(() => {
     if (isAuthenticated) {
