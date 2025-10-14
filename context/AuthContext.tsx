@@ -101,6 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setPKPState(JSON.parse(storedPKP));
           setSessionSigsState(JSON.parse(storedSessionSigs));
           setIsAuthenticated(true);
+          // Clear any errors since we successfully loaded auth from storage
+          setError(null);
         } else {
           setIsAuthenticated(false);
         }
@@ -151,14 +153,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPendingPkpSelection(false);
       setAvailablePkps(null);
       setCurrentAuthMethodForPkpSelection(null);
+      // Clear any previous errors since authentication succeeded
+      setError(null);
       
       localStorage.setItem('lit-auth-method', JSON.stringify(newAuthMethod));
       localStorage.setItem('lit-pkp', JSON.stringify(newPKP));
       localStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigsResult));
       
       // Redirect to /space after successful login if not from a callback page
+      // Wrap in try-catch to prevent redirect errors from breaking authentication
       if (shouldRedirect && pathname === '/') {
-        router.push('/space');
+        try {
+          router.push('/space');
+        } catch (redirectErr) {
+          console.warn('Error during redirect, but authentication succeeded:', redirectErr);
+        }
       }
       
       return { pkp: newPKP, sessionSigs: sessionSigsResult };

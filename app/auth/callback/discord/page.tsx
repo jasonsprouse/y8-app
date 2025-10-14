@@ -62,11 +62,12 @@ export default function DiscordCallbackPage() {
   }, [isAuthenticated, router]);
 
   useEffect(() => {
-    if (error) {
+    // Only show errors if not authenticated - if authenticated, error is stale
+    if (error && !isAuthenticated) {
       setAuthError(error.message);
       setIsProcessing(false);
     }
-  }, [error]);
+  }, [error, isAuthenticated]);
 
   if (authError) {
     return (
