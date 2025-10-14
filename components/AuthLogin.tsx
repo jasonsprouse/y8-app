@@ -26,6 +26,8 @@ export default function AuthLogin() {
     availablePkps,
     pendingPkpSelection,
     setPKP,
+    needsToCreateAccount,
+    clearNeedsToCreateAccount,
     error 
   } = useAuth();
   
@@ -53,7 +55,21 @@ export default function AuthLogin() {
     );
   }
 
-  // Handle create account view
+  // Handle needs to create account view (from AuthContext)
+  if (needsToCreateAccount) {
+    return (
+      <div className={styles.authContainer}>
+        <CreateAccount
+          signUp={() => {
+            clearNeedsToCreateAccount();
+            setAuthView('signup');
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Handle create account view (from local state)
   if (authView === 'create-account') {
     return (
       <div className={styles.authContainer}>
