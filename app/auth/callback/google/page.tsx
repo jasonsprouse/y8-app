@@ -72,7 +72,16 @@ function GoogleCallbackContent() {
   }
 
   if (!isProcessing) {
-    return null;
+    // Show a spinner/message while redirecting after authentication
+    return (
+      <div className="container" style={{ padding: '2rem', textAlign: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          <h2>Redirecting...</h2>
+          <p>You are being redirected to your space.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
