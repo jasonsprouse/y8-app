@@ -161,6 +161,22 @@ test('Google callback redirects to /space on success', () => {
          content.includes('router.push("/space")');
 });
 
+test('Google callback redirects to home (/) when account creation needed', () => {
+  const filePath = path.join(__dirname, 'app', 'auth', 'callback', 'google', 'page.tsx');
+  if (!checkFileExists(filePath)) return null;
+  const content = readFile(filePath);
+  return content.includes('needsToCreateAccount') && 
+         (content.includes('router.push(\'/\')') || content.includes('router.push("/")')); 
+});
+
+test('Discord callback redirects to home (/) when account creation needed', () => {
+  const filePath = path.join(__dirname, 'app', 'auth', 'callback', 'discord', 'page.tsx');
+  if (!checkFileExists(filePath)) return null;
+  const content = readFile(filePath);
+  return content.includes('needsToCreateAccount') && 
+         (content.includes('router.push(\'/\')') || content.includes('router.push("/")')); 
+});
+
 // Test 4: Application structure
 test('App has root layout with Providers', () => {
   const content = readFile(path.join(__dirname, 'app', 'layout.tsx'));
