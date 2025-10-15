@@ -57,7 +57,7 @@ export default function DiscordCallbackPage() {
   useEffect(() => {
     if (isAuthenticated) {
       // Redirect to dashboard or home after successful authentication
-      router.push('/space');
+      router.push('/');
     }
   }, [isAuthenticated, router]);
 
