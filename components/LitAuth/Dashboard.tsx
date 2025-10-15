@@ -1,7 +1,7 @@
 import { IRelayPKP, SessionSigs } from '@lit-protocol/types';
 import { useState } from 'react';
 import { PKPEthersWallet } from '@lit-protocol/pkp-ethers';
-import { useRouter } from 'next/router';
+// import { useRouter } from 'next/router';
 import { useDisconnect } from 'wagmi';
 import { litNodeClient, getPKPs } from '../../utils/lit';
 import { ethers } from 'ethers';
@@ -23,7 +23,7 @@ export default function Dashboard({
   const [error, setError] = useState<Error>();
 
   const { disconnectAsync } = useDisconnect();
-  const router = useRouter();
+  // const router = useRouter();
 
   /**
    * Sign a message with current PKP
@@ -66,7 +66,7 @@ export default function Dashboard({
       await disconnectAsync();
     } catch (err) { }
     localStorage.removeItem('lit-wallet-sig');
-    router.reload();
+    // router.reload();
   }
 
   const shortenAddress = (address: string) => {

@@ -12,7 +12,7 @@ export default function AuthHandler() {
   useEffect(() => {
     if (isAuthenticated) {
       if (pathname === '/' || pathname.startsWith('/auth/callback')) {
-        router.push('/space');
+        router.push('/');
       }
     }
   }, [isAuthenticated, pathname, router]);
