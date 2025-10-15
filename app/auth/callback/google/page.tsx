@@ -57,7 +57,7 @@ function GoogleCallbackContent() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/space');
+      router.push('/');
     }
   }, [isAuthenticated, router]);
 
