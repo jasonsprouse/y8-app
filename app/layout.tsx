@@ -8,6 +8,9 @@ import Footer from '../components/ui/Footer';
 import NotificationBar from '../components/ui/NotificationBar';
 import RouteGuard from '../components/RouteGuard';
 import '../styles/globals.css';
+import dynamic from 'next/dynamic';
+
+const AiAgent = dynamic(() => import('../components/AiAgent'), { ssr: false });
 
 // Configure fonts
 const poppins = Poppins({
@@ -53,6 +56,7 @@ export default function RootLayout({
           </main>
           
           <Footer />
+          <AiAgent />
         </Providers>
       </body>
     </html>
