@@ -42,7 +42,7 @@ interface AuthContextType {
   loginWithWebAuthn: () => Promise<void>;
   loginWithEthWallet: () => Promise<void>;
   loginWithStytchOtp: (method: 'email' | 'phone') => Promise<void>;
-  registerWebAuthn: () => Promise<void>;
+  registerWebAuthn: () => Promise<IRelayPKP | undefined>;
   logOut: () => void;
   setPKP: (pkp: IRelayPKP) => void;
   setSessionSigs: (sessionSigs: SessionSigs) => void;
@@ -67,7 +67,7 @@ const AuthContext = createContext<AuthContextType>({
   loginWithWebAuthn: async () => {},
   loginWithEthWallet: async () => {},
   loginWithStytchOtp: async () => {},
-  registerWebAuthn: async () => {},
+  registerWebAuthn: async () => { return undefined; },
   logOut: () => {},
   setPKP: () => {},
   setSessionSigs: () => {},
@@ -382,6 +382,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const newPKP = await litRegisterWebAuthn();
       const authMethodResult: AuthMethod = await authenticateWithWebAuthn();
       await updateSession(newPKP, authMethodResult);
+      return newPKP;
     } catch (err) {
       console.error('Error registering with WebAuthn:', err);
       setError(err instanceof Error ? err : new Error(String(err)));

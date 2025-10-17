@@ -11,6 +11,9 @@ const navItems = [
   { href: '/shop', label: 'Shop' },
   { href: '/blog', label: 'Blog' },
   { href: '/calendar', label: 'Calendar' },
+  { href: '/npe', label: 'NPE Management' },
+  { href: '/sales', label: 'NFT Sales' },
+  { href: '/marketing', label: 'Marketing' },
 ];
 
 const Navbar = () => {
