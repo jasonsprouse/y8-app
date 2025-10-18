@@ -16,8 +16,8 @@ const NpeManager = () => {
   const { registerWebAuthn, authMethod } = useAuth();
   const [newPkp, setNewPkp] = useState<IRelayPKP | null>(null);
   const [allPkps, setAllPkps] = useState<IRelayPKP[]>([]);
-  const [schemas, setSchemas] = useState<{ [pkpAddress: string]: NpeSchema }>({});
-  const [newSchemaField, setNewSchemaField] = useState<{ [pkpAddress: string]: string }>({});
+  const [schemas, setSchemas] = useState<{ [ethAddress: string]: NpeSchema }>({});
+  const [newSchemaField, setNewSchemaField] = useState<{ [ethAddress: string]: string }>({});
   const [error, setError] = useState<Error | null>(null);
   const [isMinting, setIsMinting] = useState<boolean>(false);
   const [isFetching, setIsFetching] = useState<boolean>(false);
@@ -31,7 +31,7 @@ const NpeManager = () => {
         setNewPkp(pkp);
         setSchemas((prev) => ({
           ...prev,
-          [pkp.pkpAddress]: {
+          [pkp.ethAddress]: {
             agentInteractions: '',
             litActions: '',
             gblEnvironments: '',
@@ -59,14 +59,14 @@ const NpeManager = () => {
       const pkps = await getPKPs(authMethod);
       setAllPkps(pkps);
       const initialSchemas = pkps.reduce((acc, pkp) => {
-        acc[pkp.pkpAddress] = {
+        acc[pkp.ethAddress] = {
           agentInteractions: '',
           litActions: '',
           gblEnvironments: '',
           xrNetworking: '',
         };
         return acc;
-      }, {} as { [pkpAddress: string]: NpeSchema });
+      }, {} as { [ethAddress: string]: NpeSchema });
       setSchemas(initialSchemas);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -75,21 +75,21 @@ const NpeManager = () => {
     }
   };
 
-  const handleSchemaChange = (pkpAddress: string, field: string, value: string) => {
+  const handleSchemaChange = (ethAddress: string, field: string, value: string) => {
     setSchemas((prev) => ({
       ...prev,
-      [pkpAddress]: {
-        ...prev[pkpAddress],
+      [ethAddress]: {
+        ...prev[ethAddress],
         [field]: value,
       },
     }));
   };
 
-  const handleAddSchemaField = (pkpAddress: string) => {
-    const fieldName = newSchemaField[pkpAddress];
-    if (fieldName && !schemas[pkpAddress][fieldName]) {
-      handleSchemaChange(pkpAddress, fieldName, '');
-      setNewSchemaField((prev) => ({ ...prev, [pkpAddress]: '' }));
+  const handleAddSchemaField = (ethAddress: string) => {
+    const fieldName = newSchemaField[ethAddress];
+    if (fieldName && !schemas[ethAddress][fieldName]) {
+      handleSchemaChange(ethAddress, fieldName, '');
+      setNewSchemaField((prev) => ({ ...prev, [ethAddress]: '' }));
     }
   };
 
@@ -131,20 +131,20 @@ const NpeManager = () => {
           <h3 className="text-xl font-bold">Your PKPs</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {allPkps.map((pkp) => (
-              <div key={pkp.pkpAddress} className="border rounded-lg p-4">
+              <div key={pkp.ethAddress} className="border rounded-lg p-4">
                 <p className="font-bold">PKP Address:</p>
-                <p className="break-all">{pkp.pkpAddress}</p>
+                <p className="break-all">{pkp.ethAddress}</p>
                 <p className="font-bold mt-2">Public Key:</p>
                 <p className="break-all">{pkp.publicKey}</p>
                 <div className="mt-4">
                   <h4 className="font-bold">Schema</h4>
-                  {Object.keys(schemas[pkp.pkpAddress] || {}).map((key) => (
+                  {Object.keys(schemas[pkp.ethAddress] || {}).map((key) => (
                     <div key={key} className="mt-2">
                       <label className="block text-sm font-medium text-gray-700">{key}</label>
                       <input
                         type="text"
-                        value={schemas[pkp.pkpAddress][key]}
-                        onChange={(e) => handleSchemaChange(pkp.pkpAddress, key, e.target.value)}
+                        value={schemas[pkp.ethAddress][key]}
+                        onChange={(e) => handleSchemaChange(pkp.ethAddress, key, e.target.value)}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       />
                     </div>
@@ -153,12 +153,12 @@ const NpeManager = () => {
                     <input
                       type="text"
                       placeholder="New field name"
-                      value={newSchemaField[pkp.pkpAddress] || ''}
-                      onChange={(e) => setNewSchemaField((prev) => ({ ...prev, [pkp.pkpAddress]: e.target.value }))}
+                      value={newSchemaField[pkp.ethAddress] || ''}
+                      onChange={(e) => setNewSchemaField((prev) => ({ ...prev, [pkp.ethAddress]: e.target.value }))}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     />
                     <button
-                      onClick={() => handleAddSchemaField(pkp.pkpAddress)}
+                      onClick={() => handleAddSchemaField(pkp.ethAddress)}
                       className="btn btn-secondary mt-2"
                     >
                       Add Field
