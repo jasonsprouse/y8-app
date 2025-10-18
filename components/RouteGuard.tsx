@@ -20,6 +20,11 @@ const isPublicOrAuthPath = (pathname: string): boolean => {
     return true;
   }
   
+  // Check if it's a blog post path (starts with /blog/)
+  if (pathname.startsWith('/blog/')) {
+    return true;
+  }
+  
   return false;
 };
 
