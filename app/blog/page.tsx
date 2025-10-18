@@ -1,5 +1,4 @@
-import Link from 'next/link';
-import { getSortedPostsData } from '../../lib/posts';
+import { getPostData } from '../../lib/posts';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
@@ -11,22 +10,15 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function Blog() {
-  const allPostsData = getSortedPostsData();
+export default async function Blog() {
+  const postData = await getPostData('npe-manager-guide');
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8">Blog</h1>
-      <ul className="space-y-4">
-        {allPostsData.map(({ id, date, title }) => (
-          <li key={id}>
-            <Link href={`/blog/${id}`} className="text-2xl font-bold text-blue-600 hover:underline">
-              {title}
-            </Link>
-            <br />
-            <small className="text-gray-500">{date}</small>
-          </li>
-        ))}
-      </ul>
+      <article>
+        <h1 className="text-4xl font-bold mb-4">{postData.title}</h1>
+        <div className="text-gray-500 mb-8">{postData.date}</div>
+        <div className="prose" dangerouslySetInnerHTML={{ __html: postData.contentHtml }} />
+      </article>
     </div>
   );
 }
