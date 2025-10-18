@@ -8,11 +8,16 @@ import { wagmiConfig} from '../config/wagmi';
 
 const queryClient = new QueryClient();
 
+import AuthLoader from './AuthLoader';
+
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <AuthLoader />
+          {children}
+        </AuthProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

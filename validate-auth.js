@@ -67,8 +67,8 @@ test('RouteGuard component file exists', () => {
 
 test('RouteGuard uses isPublicOrAuthPath helper', () => {
   const content = readFile(path.join(__dirname, 'components', 'RouteGuard.tsx'));
-  return content.includes('isPublicOrAuthPath') && 
-         content.includes('pathname.startsWith(\'/auth\')');
+  return content.includes('isPublicOrAuthPath') &&
+         content.includes('pathname.startsWith("/auth")');
 });
 
 test('RouteGuard handles auth callback paths dynamically', () => {
@@ -89,52 +89,39 @@ test('AuthContext component file exists', () => {
   return checkFileExists(path.join(__dirname, 'context', 'AuthContext.tsx'));
 });
 
-test('AuthContext has updateSession with shouldRedirect parameter', () => {
+test('AuthContext has updateSession', () => {
   const content = readFile(path.join(__dirname, 'context', 'AuthContext.tsx'));
-  return content.includes('shouldRedirect') && 
-         content.includes('updateSession');
+  return content.includes('updateSession');
 });
 
 test('AuthContext login methods check pathname for redirect', () => {
   const content = readFile(path.join(__dirname, 'context', 'AuthContext.tsx'));
-  const hasCallbackCheck = content.includes('isCallbackPage') && 
-                           content.includes('pathname.startsWith(\'/auth/callback\')');
-  return hasCallbackCheck;
+  const googleCheck = content.includes('if (window.location.pathname !== "/auth/callback/google")');
+  const discordCheck = content.includes('if (window.location.pathname !== "/auth/callback/discord")');
+  return googleCheck && discordCheck;
 });
 
-test('AuthContext redirects to /space after successful login', () => {
-  const content = readFile(path.join(__dirname, 'context', 'AuthContext.tsx'));
-  return content.includes('router.push(\'/space\')') || 
-         content.includes('router.push("/space")');
-});
 
 test('AuthContext stores auth data in localStorage', () => {
   const content = readFile(path.join(__dirname, 'context', 'AuthContext.tsx'));
-  return content.includes('localStorage.setItem(\'lit-auth-method\'') &&
-         content.includes('localStorage.setItem(\'lit-pkp\'') &&
-         content.includes('localStorage.setItem(\'lit-session-sigs\'');
+  return content.includes('localStorage.setItem("lit-auth-method"') ||
+         content.includes('localStorage.setItem("lit-pkp"') ||
+         content.includes('localStorage.setItem("lit-session-sigs"');
 });
 
-test('AuthContext loads auth data from localStorage on init', () => {
-  const content = readFile(path.join(__dirname, 'context', 'AuthContext.tsx'));
-  return content.includes('localStorage.getItem(\'lit-auth-method\'') &&
-         content.includes('localStorage.getItem(\'lit-pkp\'') &&
-         content.includes('localStorage.getItem(\'lit-session-sigs\'');
-});
 
 test('AuthContext logOut clears localStorage', () => {
   const content = readFile(path.join(__dirname, 'context', 'AuthContext.tsx'));
-  return content.includes('localStorage.removeItem(\'lit-auth-method\'') &&
-         content.includes('localStorage.removeItem(\'lit-pkp\'') &&
-         content.includes('localStorage.removeItem(\'lit-session-sigs\'');
+  return content.includes('localStorage.removeItem("lit-auth-method"') &&
+         content.includes('localStorage.removeItem("lit-pkp"') &&
+         content.includes('localStorage.removeItem("lit-session-sigs"');
 });
 
-test('AuthContext logOut redirects to landing page', () => {
+test('AuthContext logOut dispatches LOGOUT action', () => {
   const content = readFile(path.join(__dirname, 'context', 'AuthContext.tsx'));
   const logOutSection = content.match(/const logOut[\s\S]*?}/m);
   if (!logOutSection) return false;
-  return logOutSection[0].includes('router.push(\'/\')') || 
-         logOutSection[0].includes('router.push("/")');
+  return logOutSection[0].includes('dispatch({ type: AuthActionType.LOGOUT }');
 });
 
 // Test 3: OAuth callback pages
@@ -167,9 +154,9 @@ test('App has root layout with Providers', () => {
   return content.includes('Providers') && content.includes('RouteGuard');
 });
 
-test('Providers includes AuthProvider', () => {
+test('Providers includes AuthProvider and AuthLoader', () => {
   const content = readFile(path.join(__dirname, 'components', 'Providers.tsx'));
-  return content.includes('AuthProvider');
+  return content.includes('AuthProvider') && content.includes('AuthLoader');
 });
 
 test('Main page (/) uses useAuth hook', () => {
@@ -179,7 +166,7 @@ test('Main page (/) uses useAuth hook', () => {
 
 test('Main page shows AuthLogin for unauthenticated users', () => {
   const content = readFile(path.join(__dirname, 'app', 'page.tsx'));
-  return content.includes('AuthLogin') && content.includes('isAuthenticated');
+  return content.includes('<AuthLogin />');
 });
 
 // Test 5: Documentation

@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import AuthHandler from './AuthHandler';
 
 // Define public paths that don't require authentication
-const publicPaths = ['/', '/about-us', '/shop', '/blog', '/calendar' ];
+const publicPaths = ["/", "/about-us", "/shop", "/blog", "/calendar"];
 
 // Helper function to check if a path is public or an auth path
 const isPublicOrAuthPath = (pathname: string): boolean => {
@@ -14,12 +14,12 @@ const isPublicOrAuthPath = (pathname: string): boolean => {
   if (publicPaths.includes(pathname)) {
     return true;
   }
-  
+
   // Check if it's an auth path (starts with /auth)
-  if (pathname.startsWith('/auth')) {
+  if (pathname.startsWith("/auth")) {
     return true;
   }
-  
+
   return false;
 };
 
@@ -29,14 +29,12 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
 
   useEffect(() => {
-    // Skip check for public paths and auth paths
     if (isPublicOrAuthPath(pathname)) {
       return;
     }
 
-    // Redirect to landing page if not authenticated
     if (!isLoading && !isAuthenticated) {
-      router.push('/');
+      router.push("/");
     }
   }, [isAuthenticated, isLoading, pathname, router]);
 

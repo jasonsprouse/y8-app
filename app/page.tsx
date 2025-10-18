@@ -11,7 +11,7 @@ import toast, { Toaster } from 'react-hot-toast';
 const notify = (pageName: string) => toast(`You're visiting the ${pageName} page`);
 
 export default function Home() {
-  const { isLoading, pkp, sessionSigs } = useAuth();
+  const { state: { isLoading, pkp, sessionSigs } } = useAuth();
 
   if (isLoading) {
     return (
