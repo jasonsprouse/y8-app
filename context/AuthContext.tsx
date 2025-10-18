@@ -3,14 +3,14 @@
 import React, {
   createContext,
   useContext,
-  useEffect,
   useCallback,
   useReducer,
 } from "react";
-import { AuthMethod, IRelayPKP, SessionSigs } from "@lit-protocol/types";
+import { AuthMethod, IRelayPKP, SessionSigs, AuthSig } from "@lit-protocol/types";
 import { AuthMethodType } from "@lit-protocol/constants";
 import { LitResourceAbilityRequest } from "@lit-protocol/auth-helpers";
 import {
+  litNodeClient,
   getSessionSigs,
   signInWithGoogle,
   signInWithDiscord,
@@ -38,7 +38,7 @@ interface AuthState {
 }
 
 // Define action types
-enum AuthActionType {
+export enum AuthActionType {
   LOGIN_START,
   LOGIN_SUCCESS,
   LOGIN_FAILURE,
@@ -166,6 +166,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 ability: "lit-action-execution",
               } as LitResourceAbilityRequest,
             ],
+            authNeededCallback: async (params) => {
+              const { chain, expiration, resources } = params;
+              const response = await litNodeClient.signSessionKey({
+                authMethods: [newAuthMethod],
+                pkpPublicKey: newPKP.publicKey,
+                expiration,
+                resources: resources,
+                chainId: 1,
+              });
+              return response as unknown as AuthSig;
+            },
           },
         });
 
@@ -317,4 +328,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 // Custom hook to use auth context
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

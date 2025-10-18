@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, AuthActionType } from '../context/AuthContext';
 
 export default function AuthLoader() {
   const { dispatch } = useAuth();
@@ -15,7 +15,7 @@ export default function AuthLoader() {
 
         if (storedAuthMethod && storedPKP && storedSessionSigs) {
           dispatch({
-            type: 'LOGIN_SUCCESS',
+            type: AuthActionType.LOGIN_SUCCESS,
             payload: {
               authMethod: JSON.parse(storedAuthMethod),
               pkp: JSON.parse(storedPKP),
@@ -23,12 +23,12 @@ export default function AuthLoader() {
             },
           });
         } else {
-          dispatch({ type: 'RESET' });
+          dispatch({ type: AuthActionType.RESET });
         }
       } catch (err) {
         console.error("Error loading auth from localStorage:", err);
         dispatch({
-          type: 'LOGIN_FAILURE',
+          type: AuthActionType.LOGIN_FAILURE,
           payload: err instanceof Error ? err : new Error(String(err)),
         });
       }
