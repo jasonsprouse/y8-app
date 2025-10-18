@@ -6,15 +6,6 @@
       "dom.iterable",
       "esnext"
     ],
-    "baseUrl": "src/",
-    "paths": {
-      "@/styles/*": [
-        "styles/*"
-      ],
-      "@/components/*": [
-        "components/*"
-      ]
-    },
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
@@ -32,22 +23,6 @@
       }
     ]
   },
-  "allowJs": true,
-  "skipLibCheck": true,
-  "strict": false,
-  "noEmit": true,
-  "incremental": true,
-  "module": "esnext",
-  "esModuleInterop": true,
-  "moduleResolution": "node",
-  "resolveJsonModule": true,
-  "isolatedModules": true,
-  "jsx": "preserve",
-  "plugins": [
-    {
-      "name": "next"
-    }
-  ],
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",

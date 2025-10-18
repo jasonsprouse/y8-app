@@ -12,7 +12,6 @@ import {
     AuthMethodScope,
     AuthMethodType,
     LIT_ABILITY,
-    LIT_NETWORK,
   } from '@lit-protocol/constants';
   import {
     AuthMethod,
@@ -29,19 +28,16 @@ import {
       ? `https://${DOMAIN}`
       : `http://${DOMAIN}:3000`;
   
-  // Update the network selection
   export const SELECTED_LIT_NETWORK = 
     (process.env.NEXT_PUBLIC_LIT_NETWORK as LIT_NETWORKS_KEYS) || 
     'datil';
   
-  // Update litNodeClient with error handling
   export const litNodeClient: LitNodeClient = new LitNodeClient({
     alertWhenUnauthorized: false,
     litNetwork: SELECTED_LIT_NETWORK,
     debug: true,
   });
   
-  // Wrap connection in async IIFE to properly handle errors
   (async () => {
     try {
       await litNodeClient.connect();
@@ -55,9 +51,6 @@ import {
     relayApiKey: 'test-api-key',
   });
   
-  /**
-   * Setting all available providers
-   */
   let googleProvider: GoogleProvider;
   let discordProvider: DiscordProvider;
   let ethWalletProvider: EthWalletProvider;
@@ -66,7 +59,10 @@ import {
   let stytchSmsOtpProvider: StytchAuthFactorOtpProvider<'sms'>;
   
   /**
-   * Get the provider that is authenticated with the given auth method
+   * @function getAuthenticatedProvider
+   * @description Get the provider that is authenticated with the given auth method
+   * @param {AuthMethod} authMethod - The auth method to get the provider for
+   * @returns {BaseProvider} The authenticated provider
    */
   function getAuthenticatedProvider(authMethod: AuthMethod): BaseProvider {
     const providers = {
@@ -81,7 +77,13 @@ import {
     return providers[authMethod.authMethodType];
   }
   
-  function getGoogleProvider(redirectUri: string) {
+  /**
+   * @function getGoogleProvider
+   * @description Get the Google provider
+   * @param {string} redirectUri - The redirect URI for Google auth
+   * @returns {GoogleProvider} The Google provider
+   */
+  function getGoogleProvider(redirectUri: string): GoogleProvider {
     if (!googleProvider) {
       googleProvider = new GoogleProvider({
         relay: litRelay,
@@ -89,10 +91,16 @@ import {
         redirectUri,
       });
     }
-  
     return googleProvider;
   }
-  function getDiscordProvider(redirectUri: string) {
+
+  /**
+   * @function getDiscordProvider
+   * @description Get the Discord provider
+   * @param {string} redirectUri - The redirect URI for Discord auth
+   * @returns {DiscordProvider} The Discord provider
+   */
+  function getDiscordProvider(redirectUri: string): DiscordProvider {
     if (!discordProvider) {
       discordProvider = new DiscordProvider({
         relay: litRelay,
@@ -100,10 +108,15 @@ import {
         redirectUri,
       });
     }
-  
     return discordProvider;
   }
-  function getEthWalletProvider() {
+
+  /**
+   * @function getEthWalletProvider
+   * @description Get the Ethereum wallet provider
+   * @returns {EthWalletProvider} The Ethereum wallet provider
+   */
+  function getEthWalletProvider(): EthWalletProvider {
     if (!ethWalletProvider) {
       ethWalletProvider = new EthWalletProvider({
         relay: litRelay,
@@ -112,20 +125,30 @@ import {
         origin: ORIGIN,
       });
     }
-  
     return ethWalletProvider;
   }
-  function getWebAuthnProvider() {
+
+  /**
+   * @function getWebAuthnProvider
+   * @description Get the WebAuthn provider
+   * @returns {WebAuthnProvider} The WebAuthn provider
+   */
+  function getWebAuthnProvider(): WebAuthnProvider {
     if (!webAuthnProvider) {
       webAuthnProvider = new WebAuthnProvider({
         relay: litRelay,
         litNodeClient,
       });
     }
-  
     return webAuthnProvider;
   }
-  function getStytchEmailOtpProvider() {
+
+  /**
+   * @function getStytchEmailOtpProvider
+   * @description Get the Stytch email OTP provider
+   * @returns {StytchAuthFactorOtpProvider<'email'>} The Stytch email OTP provider
+   */
+  function getStytchEmailOtpProvider(): StytchAuthFactorOtpProvider<'email'> {
     if (!stytchEmailOtpProvider) {
       stytchEmailOtpProvider = new StytchAuthFactorOtpProvider<'email'>(
         {
@@ -136,10 +159,15 @@ import {
         'email',
       );
     }
-  
     return stytchEmailOtpProvider;
   }
-  function getStytchSmsOtpProvider() {
+
+  /**
+   * @function getStytchSmsOtpProvider
+   * @description Get the Stytch SMS OTP provider
+   * @returns {StytchAuthFactorOtpProvider<'sms'>} The Stytch SMS OTP provider
+   */
+  function getStytchSmsOtpProvider(): StytchAuthFactorOtpProvider<'sms'> {
     if (!stytchSmsOtpProvider) {
       stytchSmsOtpProvider = new StytchAuthFactorOtpProvider<'sms'>(
         {
@@ -150,20 +178,23 @@ import {
         'sms',
       );
     }
-  
     return stytchSmsOtpProvider;
   }
   
-  
   /**
-   * Validate provider
+   * @function isSocialLoginSupported
+   * @description Check if a social login provider is supported
+   * @param {string} provider - The provider to check
+   * @returns {boolean} Whether the provider is supported
    */
   export function isSocialLoginSupported(provider: string): boolean {
     return ['google', 'discord'].includes(provider);
   }
   
   /**
-   * Redirect to Lit login
+   * @function signInWithGoogle
+   * @description Redirect to Google login
+   * @param {string} redirectUri - The redirect URI for Google auth
    */
   export async function signInWithGoogle(redirectUri: string): Promise<void> {
     const googleProvider = getGoogleProvider(redirectUri);
@@ -171,18 +202,20 @@ import {
   }
   
   /**
-   * Get auth method object from redirect
+   * @function authenticateWithGoogle
+   * @description Get auth method object from Google redirect
+   * @param {string} redirectUri - The redirect URI for Google auth
+   * @returns {Promise<AuthMethod>} The auth method object
    */
-  export async function authenticateWithGoogle(
-    redirectUri: string
-  ): Promise<AuthMethod> {
+  export async function authenticateWithGoogle(redirectUri: string): Promise<AuthMethod> {
     const googleProvider = getGoogleProvider(redirectUri);
-    const authMethod = await googleProvider.authenticate();
-    return authMethod;
+    return await googleProvider.authenticate();
   }
   
   /**
-   * Redirect to Lit login
+   * @function signInWithDiscord
+   * @description Redirect to Discord login
+   * @param {string} redirectUri - The redirect URI for Discord auth
    */
   export async function signInWithDiscord(redirectUri: string): Promise<void> {
     const discordProvider = getDiscordProvider(redirectUri);
@@ -190,54 +223,55 @@ import {
   }
   
   /**
-   * Get auth method object from redirect
+   * @function authenticateWithDiscord
+   * @description Get auth method object from Discord redirect
+   * @param {string} redirectUri - The redirect URI for Discord auth
+   * @returns {Promise<AuthMethod>} The auth method object
    */
-  export async function authenticateWithDiscord(
-    redirectUri: string
-  ): Promise<AuthMethod> {
+  export async function authenticateWithDiscord(redirectUri: string): Promise<AuthMethod> {
     const discordProvider = getDiscordProvider(redirectUri);
-    const authMethod = await discordProvider.authenticate();
-    return authMethod;
+    return await discordProvider.authenticate();
   }
   
   /**
-   * Get auth method object by signing a message with an Ethereum wallet
+   * @function authenticateWithEthWallet
+   * @description Get auth method object by signing a message with an Ethereum wallet
+   * @param {string} [address] - The user's wallet address
+   * @param {(message: string) => Promise<string>} [signMessage] - The function to sign a message
+   * @returns {Promise<AuthMethod>} The auth method object
    */
   export async function authenticateWithEthWallet(
     address?: string,
     signMessage?: (message: string) => Promise<string>
   ): Promise<AuthMethod> {
     const ethWalletProvider = getEthWalletProvider();
-    return await ethWalletProvider.authenticate({
-      address,
-      signMessage,
-    });
+    return await ethWalletProvider.authenticate({ address, signMessage });
   }
   
   /**
-   * Register new WebAuthn credential
+   * @function registerWebAuthn
+   * @description Register a new WebAuthn credential
+   * @returns {Promise<IRelayPKP>} The new PKP
    */
   export async function registerWebAuthn(): Promise<IRelayPKP> {
     const webAuthnProvider = getWebAuthnProvider();
-    // Register new WebAuthn credential
     const options = await webAuthnProvider.register();
-  
-    // Verify registration and mint PKP through relay server
     const txHash = await webAuthnProvider.verifyAndMintPKPThroughRelayer(options);
     const response = await webAuthnProvider.relay.pollRequestUntilTerminalState(txHash);
     if (response.status !== 'Succeeded') {
       throw new Error('Minting failed');
     }
-    const newPKP: IRelayPKP = {
+    return {
       tokenId: response.pkpTokenId,
       publicKey: response.pkpPublicKey,
       ethAddress: response.pkpEthAddress,
     };
-    return newPKP;
   }
   
   /**
-   * Get auth method object by authenticating with a WebAuthn credential
+   * @function authenticateWithWebAuthn
+   * @description Authenticate with a WebAuthn credential
+   * @returns {Promise<AuthMethod>} The auth method object
    */
   export async function authenticateWithWebAuthn(): Promise<AuthMethod> {
     const webAuthnProvider = getWebAuthnProvider();
@@ -245,7 +279,12 @@ import {
   }
   
   /**
-   * Get auth method object by validating Stytch JWT
+   * @function authenticateWithStytch
+   * @description Authenticate with Stytch
+   * @param {string} accessToken - The Stytch access token
+   * @param {string} [userId] - The user's ID
+   * @param {string} [method] - The authentication method ('email' or 'sms')
+   * @returns {Promise<AuthMethod>} The auth method object
    */
   export async function authenticateWithStytch(
     accessToken: string,
@@ -253,12 +292,17 @@ import {
     method?: string
   ): Promise<AuthMethod> {
     const provider = method === 'email' ? getStytchEmailOtpProvider() : getStytchSmsOtpProvider();
-  
     return await provider?.authenticate({ accessToken, userId });
   }
   
   /**
-   * Generate session sigs for given params
+   * @function getSessionSigs
+   * @description Generate session sigs for the given params
+   * @param {object} params - The params for generating session sigs
+   * @param {string} params.pkpPublicKey - The user's PKP public key
+   * @param {AuthMethod} params.authMethod - The auth method used
+   * @param {GetSessionSigsProps} params.sessionSigsParams - The session sigs params
+   * @returns {Promise<SessionSigs>} The session sigs
    */
   export async function getSessionSigs({
     pkpPublicKey,
@@ -270,7 +314,7 @@ import {
     sessionSigsParams: GetSessionSigsProps;
   }): Promise<SessionSigs> {
     await litNodeClient.connect();
-    const sessionSigs = await litNodeClient.getPkpSessionSigs({
+    return await litNodeClient.getPkpSessionSigs({
       ...sessionSigsParams,
       pkpPublicKey,
       authMethods: [authMethod],
@@ -281,33 +325,32 @@ import {
         },
       ],
     });
-  
-    return sessionSigs;
-  }
-  
-  export async function updateSessionSigs(
-    params: GetSessionSigsProps
-  ): Promise<SessionSigs> {
-    const sessionSigs = await litNodeClient.getSessionSigs(params);
-    return sessionSigs;
   }
   
   /**
-   * Fetch PKPs associated with given auth method
+   * @function updateSessionSigs
+   * @description Update the session sigs
+   * @param {GetSessionSigsProps} params - The session sigs params
+   * @returns {Promise<SessionSigs>} The updated session sigs
+   */
+  export async function updateSessionSigs(params: GetSessionSigsProps): Promise<SessionSigs> {
+    return await litNodeClient.getSessionSigs(params);
+  }
+  
+  /**
+   * @function getPKPs
+   * @description Fetch PKPs associated with the given auth method
+   * @param {AuthMethod} authMethod - The auth method to fetch PKPs for
+   * @returns {Promise<IRelayPKP[]>} A list of PKPs
    */
   export async function getPKPs(authMethod: AuthMethod): Promise<IRelayPKP[]> {
     try {
       const provider = getAuthenticatedProvider(authMethod);
-      console.log('Fetching PKPs for auth method:', authMethod.authMethodType);
       const allPKPs = await provider.fetchPKPsThroughRelayer(authMethod);
-      console.log('PKPs fetched successfully:', allPKPs);
-      
-      // Ensure we return an array
       if (!Array.isArray(allPKPs)) {
         console.error('PKPs response is not an array:', allPKPs);
         return [];
       }
-      
       return allPKPs;
     } catch (error) {
       console.error('Error fetching PKPs:', error);
@@ -316,11 +359,13 @@ import {
   }
   
   /**
-   * Mint a new PKP for current auth method
+   * @function mintPKP
+   * @description Mint a new PKP for the current auth method
+   * @param {AuthMethod} authMethod - The auth method to mint a PKP for
+   * @returns {Promise<IRelayPKP>} The new PKP
    */
   export async function mintPKP(authMethod: AuthMethod): Promise<IRelayPKP> {
     const provider = getAuthenticatedProvider(authMethod);
-    // Set scope of signing any data
     const options = {
       permittedAuthMethodScopes: [[AuthMethodScope.SignAnything]],
     };
@@ -328,15 +373,10 @@ import {
     let txHash: string;
   
     if (authMethod.authMethodType === AuthMethodType.WebAuthn) {
-      // WebAuthn provider requires different steps
       const webAuthnProvider = provider as WebAuthnProvider;
-      // Register new WebAuthn credential
       const webAuthnInfo = await webAuthnProvider.register();
-  
-      // Verify registration and mint PKP through relay server
       txHash = await webAuthnProvider.verifyAndMintPKPThroughRelayer(webAuthnInfo, options);
     } else {
-      // Mint PKP through relay server
       txHash = await provider.mintPKPThroughRelayer(authMethod, options);
     }
   
@@ -349,8 +389,6 @@ import {
         break;
       } catch (err) {
         console.warn('Minting failed, retrying...', err);
-  
-        // give it a second before retrying
         await new Promise(resolve => setTimeout(resolve, 1000));
         attempts--;
       }
@@ -360,11 +398,9 @@ import {
       throw new Error('Minting failed');
     }
   
-    const newPKP: IRelayPKP = {
+    return {
       tokenId: response.pkpTokenId,
       publicKey: response.pkpPublicKey,
       ethAddress: response.pkpEthAddress,
     };
-  
-    return newPKP;
   }
