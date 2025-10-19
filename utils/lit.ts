@@ -279,9 +279,6 @@ import {
         signedMessage: message,
         signature,
       }),
-      userId: ethAddress,
-      expiresIn: 0,
-      authMethodScopes: [AuthMethodScope.SignAnything],
     };
   }
   
