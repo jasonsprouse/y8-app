@@ -9,28 +9,24 @@ import { wagmiConfig, projectId, metadata } from '../config/wagmi';
 
 const queryClient = new QueryClient();
 
-// Initialize Web3Modal outside of component to avoid re-initialization
-let web3modalInitialized = false;
+// Initialize Web3Modal at module level to ensure it's ready before any component uses it
+if (typeof window !== 'undefined') {
+  createWeb3Modal({
+    wagmiConfig,
+    projectId,
+    themeMode: 'light',
+    themeVariables: {
+      '--w3m-accent': '#000000',
+    },
+    enableAnalytics: false,
+  });
+}
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    
-    // Initialize Web3Modal only once on client side
-    if (!web3modalInitialized && typeof window !== 'undefined') {
-      createWeb3Modal({
-        wagmiConfig,
-        projectId,
-        themeMode: 'light',
-        themeVariables: {
-          '--w3m-accent': '#000000',
-        },
-        enableAnalytics: false,
-      });
-      web3modalInitialized = true;
-    }
   }, []);
 
   // Prevent hydration mismatch
