@@ -9,17 +9,22 @@ import { wagmiConfig, projectId, metadata } from '../config/wagmi';
 
 const queryClient = new QueryClient();
 
-// Initialize Web3Modal at module level to ensure it's ready before any component uses it
-if (typeof window !== 'undefined') {
-  createWeb3Modal({
-    wagmiConfig,
-    projectId,
-    themeMode: 'light',
-    themeVariables: {
-      '--w3m-accent': '#000000',
-    },
-    enableAnalytics: false,
-  });
+// Initialize Web3Modal only if projectId is available
+// This prevents errors when NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set
+if (typeof window !== 'undefined' && projectId) {
+  try {
+    createWeb3Modal({
+      wagmiConfig,
+      projectId,
+      themeMode: 'light',
+      themeVariables: {
+        '--w3m-accent': '#000000',
+      },
+      enableAnalytics: false,
+    });
+  } catch (error) {
+    console.error('Failed to initialize Web3Modal:', error);
+  }
 }
 
 export default function Providers({ children }: { children: React.ReactNode }) {
