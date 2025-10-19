@@ -28,6 +28,8 @@
     "@tanstack/react-query": "^5.74.4",
     "@vercel/analytics": "^1.5.0",
     "@walletconnect/modal": "^2.7.0",
+    "@web3modal/siwe": "^5.1.11",
+    "@web3modal/wagmi": "^5.1.11",
     "ethers": "6.13.6",
     "framer-motion": "^12.6.3",
     "gray-matter": "^4.0.3",

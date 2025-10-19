@@ -1,5 +1,9 @@
-import { useConnect } from 'wagmi';
+"use client";
+
+import { useConnect, useAccount } from 'wagmi';
 import { useIsMounted } from '../../hooks/useIsMounted';
+import { useWeb3Modal } from '@web3modal/wagmi/react';
+import { useEffect } from 'react';
 import Image from 'next/image';
 
 interface WalletMethodsProps {
@@ -9,9 +13,23 @@ interface WalletMethodsProps {
 
 const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
   const isMounted = useIsMounted();
-  const { connectors } = useConnect();
+  const { connectors, connect } = useConnect();
+  const { isConnected, connector: activeConnector } = useAccount();
+  const { open } = useWeb3Modal();
+
+  // When wallet connects via Web3Modal, authenticate with Lit
+  useEffect(() => {
+    if (isConnected && activeConnector) {
+      // Trigger authentication with the connected wallet
+      authWithEthWallet({ connector: activeConnector });
+    }
+  }, [isConnected, activeConnector, authWithEthWallet]);
 
   if (!isMounted) return null;
+
+  const handleWeb3ModalOpen = async () => {
+    await open();
+  };
 
   return (
     <>
@@ -21,6 +39,31 @@ const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
         of the address.
       </p>
       <div className="buttons-container">
+        {/* Web3Modal Button - Primary method */}
+        <button
+          type="button"
+          className="btn btn--primary"
+          onClick={handleWeb3ModalOpen}
+        >
+          <div className="btn__icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3"
+              />
+            </svg>
+          </div>
+          <span className="btn__label">Connect Wallet</span>
+        </button>
+
+        {/* Fallback direct connector buttons */}
         {connectors.map(connector => (
           <button
             type="button"

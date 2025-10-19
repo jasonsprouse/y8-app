@@ -1,47 +1,41 @@
-import { createConfig } from 'wagmi';
+import { createConfig, http } from 'wagmi';
 import { mainnet, polygon, optimism } from 'wagmi/chains';
-import { http } from 'viem';
-import { MetaMaskConnector } from 'wagmi/connectors/metaMask';
-import { WalletConnectConnector } from 'wagmi/connectors/walletConnect';
-import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet';
-import { InjectedConnector } from 'wagmi/connectors/injected';
+import { walletConnect, injected, coinbaseWallet, metaMask } from 'wagmi/connectors';
 
-const chains = [mainnet, polygon, optimism];
+export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
 
-const transports = Object.fromEntries(
-  chains.map((chain) => [chain.id, http()]),
-);
+if (!projectId) {
+  console.warn('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set');
+}
+
+export const metadata = {
+  name: 'Y8 App',
+  description: 'Premier lifestyle services for everyone.',
+  url: typeof window !== 'undefined' ? window.location.origin : `https://${process.env.NEXT_PUBLIC_DOMAIN ?? 'localhost:3000'}`,
+  icons: ['https://avatars.githubusercontent.com/u/37784886'],
+};
+
+const chains = [mainnet, polygon, optimism] as const;
 
 export const wagmiConfig = createConfig({
-  autoConnect: true,
-  ssr: true,
   chains,
   connectors: [
-    new MetaMaskConnector({ chains }),
-    new WalletConnectConnector({
-      chains,
-      options: {
-        projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '',
-        showQrModal: true,
-        metadata: {
-          name: 'Y8 App',
-          description: 'Premier lifestyle services for everyone.',
-          url: `https://${process.env.NEXT_PUBLIC_DOMAIN ?? 'localhost:3000'}`,
-          icons: ['https://avatars.githubusercontent.com/u/37784886'],
-        },
-      },
+    walletConnect({ 
+      projectId,
+      metadata,
+      showQrModal: false, // Web3Modal will handle the QR modal
     }),
-    new CoinbaseWalletConnector({
-      chains,
-      options: {
-        appName: 'Y8 App',
-        appLogoUrl: 'https://avatars.githubusercontent.com/u/37784886',
-      },
-    }),
-    new InjectedConnector({
-      chains,
-      options: { shimDisconnect: true },
+    injected({ shimDisconnect: true }),
+    metaMask(),
+    coinbaseWallet({
+      appName: metadata.name,
+      appLogoUrl: metadata.icons[0],
     }),
   ],
-  transports,
+  transports: {
+    [mainnet.id]: http(),
+    [polygon.id]: http(),
+    [optimism.id]: http(),
+  },
+  ssr: true,
 });

@@ -172,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [router]);
 
   // Set PKP (handles selection from multiple PKPs)
   const setPKP = useCallback(async (selectedPkp: IRelayPKP) => {
