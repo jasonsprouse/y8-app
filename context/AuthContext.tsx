@@ -211,7 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!pkps || pkps.length === 0) {
         try {
           const newPkp = await mintPKP(result);
-          await updateSession(newPkp, result, true);
+          await updateSession(newPkp, result, false);
         } catch (mintErr) {
           console.error('Error minting PKP:', mintErr);
           setError(mintErr instanceof Error ? mintErr : new Error(String(mintErr)));
@@ -219,7 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return;
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result, true);
+        await updateSession(pkps[0], result, false);
       } else {
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
@@ -257,7 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!pkps || pkps.length === 0) {
         try {
           const newPkp = await mintPKP(result);
-          await updateSession(newPkp, result, true);
+          await updateSession(newPkp, result, false);
         } catch (mintErr) {
           console.error('Error minting PKP:', mintErr);
           setError(mintErr instanceof Error ? mintErr : new Error(String(mintErr)));
@@ -265,7 +265,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return;
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result, true);
+        await updateSession(pkps[0], result, false);
       } else {
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
