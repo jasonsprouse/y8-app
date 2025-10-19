@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import Image from 'next/image';
 
 interface WalletMethodsProps {
-  authWithEthWallet: (connector: any) => Promise<void>;
+  authWithEthWallet: () => Promise<void>;
   setView: React.Dispatch<React.SetStateAction<string>>;
 }
 
@@ -21,7 +21,8 @@ const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
   useEffect(() => {
     if (isConnected && activeConnector) {
       // Trigger authentication with the connected wallet
-      authWithEthWallet({ connector: activeConnector });
+      // The authenticateWithEthWallet function will use window.ethereum automatically
+      authWithEthWallet();
     }
   }, [isConnected, activeConnector, authWithEthWallet]);
 
@@ -70,7 +71,7 @@ const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
             className="btn btn--outline"
             disabled={!connector.ready}
             key={connector.id}
-            onClick={() => authWithEthWallet({ connector })}
+            onClick={() => connect({ connector })}
           >
             {connector.name.toLowerCase() === 'metamask' && (
               <div className="btn__icon">
