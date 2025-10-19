@@ -9,6 +9,7 @@ Y8 App is a Dapp-based decentralized application designed to [brief description 
 - Feature 1
 - Feature 2
 - Feature 3
+- AI-Powered PR Review System (authContext conformance & security checks)
 - [Add more features as needed]
 
 ## Installation
@@ -65,6 +66,19 @@ npx hardhat deploy --network [network_name]
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+**Note**: All PRs are reviewed against authContext rules and security standards. See [.github/agents/README.md](.github/agents/README.md) for review guidelines.
+
+## Code Review
+
+This project uses an AI-powered PR review system to ensure:
+- ✅ **authContext Conformance** - All authentication follows centralized patterns
+- ✅ **Security Checks** - 10 critical vulnerability categories
+- ✅ **Code Quality** - Anti-patterns and best practices
+
+**For Developers**: Review [.github/agents/authcontext-rules-quick-reference.md](.github/agents/authcontext-rules-quick-reference.md) before coding
+**For Reviewers**: Use [.github/agents/PR_REVIEW_CHECKLIST.md](.github/agents/PR_REVIEW_CHECKLIST.md) for manual reviews
+**Documentation**: See [.github/agents/](.github/agents/) for complete AI agent documentation
 
 ## License
 
