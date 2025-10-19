@@ -9,7 +9,7 @@ This application uses Web3Modal (Reown AppKit) for Web3 wallet connections. To e
 
 **Purpose**: Enables Web3Modal for connecting to various Web3 wallets (MetaMask, WalletConnect, Coinbase Wallet, etc.)
 
-**How to get it**:
+**How to get it**
 1. Visit [WalletConnect Cloud](https://cloud.walletconnect.com/)
 2. Sign up or log in
 3. Create a new project
@@ -134,4 +134,4 @@ If you encounter issues:
 1. Check the browser console for specific error messages
 2. Verify your WalletConnect project ID is active
 3. Ensure you're using a compatible wallet
-4. Contact support@goodfaith.church for assistance
+4. Refer to the project's support documentation or contact your administrator
