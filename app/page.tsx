@@ -11,7 +11,7 @@ import toast, { Toaster } from 'react-hot-toast';
 const notify = (pageName: string) => toast(`You're visiting the ${pageName} page`);
 
 export default function Home() {
-  const { isLoading, pkp, sessionSigs } = useAuth();
+  const { isLoading, isAuthenticated, pkp, sessionSigs } = useAuth();
 
   if (isLoading) {
     return (
@@ -22,11 +22,9 @@ export default function Home() {
     );
   }
 
-  const hasSession = pkp && sessionSigs;
-
   return (
     <div className="page-content">
-      {hasSession ? (
+      {isAuthenticated ? (
         <>
           <Dashboard currentAccount={pkp} sessionSigs={sessionSigs} />
           <div className={styles.grid}>

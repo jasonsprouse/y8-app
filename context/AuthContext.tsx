@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   AuthMethod, 
   IRelayPKP, 
@@ -42,7 +43,7 @@ interface AuthContextType {
   loginWithWebAuthn: () => Promise<void>;
   loginWithEthWallet: () => Promise<void>;
   loginWithStytchOtp: (method: 'email' | 'phone') => Promise<void>;
-  registerWebAuthn: () => Promise<void>;
+  registerWebAuthn: () => Promise<IRelayPKP | undefined>;
   logOut: () => void;
   setPKP: (pkp: IRelayPKP) => void;
   setSessionSigs: (sessionSigs: SessionSigs) => void;
@@ -67,7 +68,7 @@ const AuthContext = createContext<AuthContextType>({
   loginWithWebAuthn: async () => {},
   loginWithEthWallet: async () => {},
   loginWithStytchOtp: async () => {},
-  registerWebAuthn: async () => {},
+  registerWebAuthn: async () => undefined,
   logOut: () => {},
   setPKP: () => {},
   setSessionSigs: () => {},
@@ -76,6 +77,7 @@ const AuthContext = createContext<AuthContextType>({
 
 // Auth Provider component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [authMethod, setAuthMethod] = useState<AuthMethod | null>(null);
@@ -118,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Update session with PKP and auth method
-  const updateSession = useCallback(async (newPKP: IRelayPKP, newAuthMethod: AuthMethod) => {
+  const updateSession = useCallback(async (newPKP: IRelayPKP, newAuthMethod: AuthMethod, shouldRedirect: boolean = false) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -157,6 +159,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('lit-auth-method', JSON.stringify(newAuthMethod));
       localStorage.setItem('lit-pkp', JSON.stringify(newPKP));
       localStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigsResult));
+
+      if (shouldRedirect) {
+        router.push('/space');
+      }
       
       return { pkp: newPKP, sessionSigs: sessionSigsResult };
     } catch (err) {
@@ -191,8 +197,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
 
       const redirectUri = `${window.location.origin}/auth/callback/google`;
+      const isCallbackPage = window.location.pathname.startsWith('/auth/callback');
 
-      if (window.location.pathname !== '/auth/callback/google') {
+      if (!isCallbackPage) {
         await signInWithGoogle(redirectUri);
         return;
       }
@@ -204,7 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!pkps || pkps.length === 0) {
         try {
           const newPkp = await mintPKP(result);
-          await updateSession(newPkp, result);
+          await updateSession(newPkp, result, false);
         } catch (mintErr) {
           console.error('Error minting PKP:', mintErr);
           setError(mintErr instanceof Error ? mintErr : new Error(String(mintErr)));
@@ -212,7 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return;
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result);
+        await updateSession(pkps[0], result, false);
       } else {
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
@@ -236,8 +243,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       
       const redirectUri = `${window.location.origin}/auth/callback/discord`;
+      const isCallbackPage = window.location.pathname.startsWith('/auth/callback');
 
-      if (window.location.pathname !== '/auth/callback/discord') {
+      if (!isCallbackPage) {
         await signInWithDiscord(redirectUri);
         return;
       }
@@ -249,7 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!pkps || pkps.length === 0) {
         try {
           const newPkp = await mintPKP(result);
-          await updateSession(newPkp, result);
+          await updateSession(newPkp, result, false);
         } catch (mintErr) {
           console.error('Error minting PKP:', mintErr);
           setError(mintErr instanceof Error ? mintErr : new Error(String(mintErr)));
@@ -257,7 +265,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return;
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result);
+        await updateSession(pkps[0], result, false);
       } else {
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
@@ -283,7 +291,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!pkps || pkps.length === 0) {
         try {
           const newPkp = await mintPKP(result);
-          await updateSession(newPkp, result);
+          await updateSession(newPkp, result, true);
         } catch (mintErr) {
           console.error('Error minting PKP:', mintErr);
           setError(mintErr instanceof Error ? mintErr : new Error(String(mintErr)));
@@ -291,7 +299,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return;
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result);
+        await updateSession(pkps[0], result, true);
       } else {
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
@@ -317,7 +325,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!pkps || pkps.length === 0) {
         try {
           const newPkp = await mintPKP(result);
-          await updateSession(newPkp, result);
+          await updateSession(newPkp, result, true);
         } catch (mintErr) {
           console.error('Error minting PKP:', mintErr);
           setError(mintErr instanceof Error ? mintErr : new Error(String(mintErr)));
@@ -325,7 +333,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return;
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result);
+        await updateSession(pkps[0], result, true);
       } else {
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
@@ -351,7 +359,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!pkps || pkps.length === 0) {
         try {
           const newPkp = await mintPKP(result);
-          await updateSession(newPkp, result);
+          await updateSession(newPkp, result, true);
         } catch (mintErr) {
           console.error('Error minting PKP:', mintErr);
           setError(mintErr instanceof Error ? mintErr : new Error(String(mintErr)));
@@ -359,7 +367,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return;
       } else if (pkps.length === 1) {
-        await updateSession(pkps[0], result);
+        await updateSession(pkps[0], result, true);
       } else {
         setAvailablePkps(pkps);
         setCurrentAuthMethodForPkpSelection(result);
@@ -374,17 +382,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [updateSession]);
 
   // Register with WebAuthn
-  const registerWebAuthn = useCallback(async () => {
+  const registerWebAuthn = useCallback(async (): Promise<IRelayPKP | undefined> => {
     try {
       setIsLoading(true);
       setError(null);
       
       const newPKP = await litRegisterWebAuthn();
       const authMethodResult: AuthMethod = await authenticateWithWebAuthn();
-      await updateSession(newPKP, authMethodResult);
+      await updateSession(newPKP, authMethodResult, true);
+      return newPKP;
     } catch (err) {
       console.error('Error registering with WebAuthn:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
+      return undefined;
     } finally {
       setIsLoading(false);
     }
@@ -411,7 +421,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('lit-auth-method');
     localStorage.removeItem('lit-pkp');
     localStorage.removeItem('lit-session-sigs');
-  }, []);
+
+    router.push('/');
+  }, [router]);
 
   return (
     <AuthContext.Provider
