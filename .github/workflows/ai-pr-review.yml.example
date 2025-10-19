@@ -1,0 +1,212 @@
+# AI PR Review Workflow (Example Configuration)
+#
+# This is an EXAMPLE workflow showing how the AI PR Review Agent could be integrated
+# with GitHub Actions. This is NOT a fully functional workflow and would need to be
+# adapted based on your specific AI code review service or tool.
+#
+# To use this workflow:
+# 1. Choose an AI code review service (e.g., GitHub Copilot, custom AI service)
+# 2. Configure the service credentials as GitHub Secrets
+# 3. Update the workflow steps to call your chosen service
+# 4. Enable the workflow by renaming to .yml (remove .example)
+
+name: AI PR Review - authContext & Security
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'context/**'
+      - 'components/**'
+      - 'app/**'
+      - 'utils/**'
+      - 'hooks/**'
+
+jobs:
+  ai-code-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get PR diff
+        id: pr-diff
+        run: |
+          # Get the diff for this PR
+          git fetch origin ${{ github.base_ref }}
+          git diff origin/${{ github.base_ref }}...HEAD > pr-diff.txt
+          
+          # Store diff as output (truncated for GitHub Actions limits)
+          echo "diff<<EOF" >> $GITHUB_OUTPUT
+          cat pr-diff.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      # EXAMPLE: This step would call your AI service
+      # Replace this with your actual AI code review service
+      - name: AI Review (Example - Replace with actual service)
+        id: ai-review
+        run: |
+          echo "🤖 AI Review Agent would run here"
+          echo "This is an example placeholder step"
+          echo ""
+          echo "To implement:"
+          echo "1. Configure your AI service credentials"
+          echo "2. Call AI API with PR diff and agent prompt"
+          echo "3. Parse AI response and format as PR comments"
+          echo ""
+          echo "Agent Prompt: .github/agents/pr-review-agent.md"
+          echo "authContext Rules: .github/agents/authcontext-rules-quick-reference.md"
+          
+          # Example output format (would come from AI service)
+          cat > review-results.json << 'EOL'
+          {
+            "status": "success",
+            "findings": [
+              {
+                "severity": "INFO",
+                "category": "example",
+                "file": "example.tsx",
+                "line": 42,
+                "message": "This is an example finding"
+              }
+            ]
+          }
+          EOL
+      
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // This is example code - replace with actual AI review results
+            const reviewComment = `
+            ## 🤖 AI PR Review - authContext & Security
+            
+            This is an **example workflow** for AI-powered PR review.
+            
+            ### Review Configuration
+            - ✅ Agent Prompt: \`.github/agents/pr-review-agent.md\`
+            - ✅ authContext Rules: \`.github/agents/authcontext-rules-quick-reference.md\`
+            
+            ### What the AI Review Agent Checks
+            
+            #### 1. authContext Conformance
+            - Uses \`useAuth()\` hook for authentication
+            - No direct localStorage manipulation
+            - Protected routes check \`isAuthenticated\`
+            - Public routes use dynamic path matching
+            - Proper redirect logic (OAuth vs non-OAuth)
+            
+            #### 2. Security Vulnerabilities
+            - Authentication bypass attempts
+            - Hardcoded credentials or secrets
+            - Data exposure in logs/errors
+            - Input validation issues
+            - OAuth security (CSRF, state validation)
+            - Session security
+            
+            #### 3. Anti-Patterns
+            - Code duplication
+            - React/Next.js anti-patterns
+            - Type safety issues
+            - Missing error handling
+            
+            ---
+            
+            **Note**: This is an example workflow. To enable actual AI review:
+            1. Configure an AI code review service
+            2. Update \`.github/workflows/ai-pr-review.yml.example\`
+            3. Rename to \`ai-pr-review.yml\` to enable
+            
+            For manual review, use the checklist in:
+            - \`.github/agents/pr-review-agent.md\`
+            - \`.github/agents/authcontext-rules-quick-reference.md\`
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: reviewComment
+            });
+      
+      - name: Upload review results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-review-results
+          path: |
+            pr-diff.txt
+            review-results.json
+          retention-days: 30
+
+# IMPLEMENTATION NOTES:
+#
+# To implement actual AI review, you would:
+#
+# 1. Choose an AI Service:
+#    - GitHub Copilot API (if available)
+#    - OpenAI API
+#    - Anthropic Claude API
+#    - Custom AI service
+#    - Self-hosted LLM
+#
+# 2. Configure Secrets:
+#    Add these to your GitHub repository secrets:
+#    - AI_SERVICE_API_KEY
+#    - AI_SERVICE_ENDPOINT (if needed)
+#
+# 3. Update "AI Review" step:
+#    Replace the example step with actual API calls:
+#    
+#    - name: AI Review with OpenAI (Example)
+#      env:
+#        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+#      run: |
+#        # Read agent prompt
+#        AGENT_PROMPT=$(cat .github/agents/pr-review-agent.md)
+#        
+#        # Read PR diff
+#        PR_DIFF=$(cat pr-diff.txt)
+#        
+#        # Call OpenAI API (example)
+#        curl https://api.openai.com/v1/chat/completions \
+#          -H "Content-Type: application/json" \
+#          -H "Authorization: Bearer $OPENAI_API_KEY" \
+#          -d "{
+#            \"model\": \"gpt-4\",
+#            \"messages\": [
+#              {\"role\": \"system\", \"content\": \"$AGENT_PROMPT\"},
+#              {\"role\": \"user\", \"content\": \"Review this PR:\\n\\n$PR_DIFF\"}
+#            ]
+#          }" > ai-response.json
+#        
+#        # Parse response and format for PR comments
+#        # (implementation depends on your needs)
+#
+# 4. Parse and Format Results:
+#    Extract findings from AI response and format as:
+#    - Inline PR comments (specific line numbers)
+#    - General PR comment (summary)
+#    - Check run annotations
+#
+# 5. Set Review Status:
+#    Based on AI findings:
+#    - CRITICAL issues → Request Changes
+#    - WARNING issues → Approve with Comments
+#    - No issues → Approve
+#
+# For more information:
+# - GitHub Actions: https://docs.github.com/actions
+# - GitHub Script: https://github.com/actions/github-script
+# - Review API: https://docs.github.com/rest/pulls/reviews
