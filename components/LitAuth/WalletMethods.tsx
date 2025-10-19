@@ -3,7 +3,7 @@
 import { useConnect, useAccount } from 'wagmi';
 import { useIsMounted } from '../../hooks/useIsMounted';
 import { useWeb3Modal } from '@web3modal/wagmi/react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 
 interface WalletMethodsProps {
@@ -16,12 +16,14 @@ const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
   const { connectors, connect } = useConnect();
   const { isConnected, connector: activeConnector } = useAccount();
   const { open } = useWeb3Modal();
+  const authenticationAttempted = useRef(false);
 
   // When wallet connects via Web3Modal, authenticate with Lit
   useEffect(() => {
-    if (isConnected && activeConnector) {
+    if (isConnected && activeConnector && !authenticationAttempted.current) {
       // Trigger authentication with the connected wallet
       // The authenticateWithEthWallet function will use window.ethereum automatically
+      authenticationAttempted.current = true;
       authWithEthWallet();
     }
   }, [isConnected, activeConnector, authWithEthWallet]);
