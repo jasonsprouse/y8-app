@@ -21,6 +21,8 @@ import {
     LIT_NETWORKS_KEYS,
   } from '@lit-protocol/types';
   import { LitPKPResource } from '@lit-protocol/auth-helpers';
+  import { ethers } from 'ethers';
+  import { BrowserProvider } from 'ethers';
   
   export const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN || 'localhost';
   export const ORIGIN =
@@ -48,7 +50,6 @@ import {
   
   const litRelay = new LitRelay({
     relayUrl: LitRelay.getRelayUrl(SELECTED_LIT_NETWORK),
-    relayApiKey: 'test-api-key',
   });
   
   let googleProvider: GoogleProvider;
@@ -65,16 +66,24 @@ import {
    * @returns {BaseProvider} The authenticated provider
    */
   function getAuthenticatedProvider(authMethod: AuthMethod): BaseProvider {
-    const providers = {
-      [AuthMethodType.GoogleJwt]: googleProvider,
-      [AuthMethodType.Discord]: discordProvider,
-      [AuthMethodType.EthWallet]: ethWalletProvider,
-      [AuthMethodType.WebAuthn]: webAuthnProvider,
-      [AuthMethodType.StytchEmailFactorOtp]: stytchEmailOtpProvider,
-      [AuthMethodType.StytchSmsFactorOtp]: stytchSmsOtpProvider,
-    };
-  
-    return providers[authMethod.authMethodType];
+    const origin = typeof window !== 'undefined' ? window.location.origin : ORIGIN;
+
+    switch (authMethod.authMethodType) {
+      case AuthMethodType.GoogleJwt:
+        return getGoogleProvider(`${origin}/auth/callback/google`);
+      case AuthMethodType.Discord:
+        return getDiscordProvider(`${origin}/auth/callback/discord`);
+      case AuthMethodType.EthWallet:
+        return getEthWalletProvider();
+      case AuthMethodType.WebAuthn:
+        return getWebAuthnProvider();
+      case AuthMethodType.StytchEmailFactorOtp:
+        return getStytchEmailOtpProvider();
+      case AuthMethodType.StytchSmsFactorOtp:
+        return getStytchSmsOtpProvider();
+      default:
+        throw new Error(`Auth provider not initialized for type ${authMethod.authMethodType}.`);
+    }
   }
   
   /**
@@ -242,10 +251,38 @@ import {
    */
   export async function authenticateWithEthWallet(
     address?: string,
-    signMessage?: (message: string) => Promise<string>
+    signMessage?: (message: string) => Promise<string>,
   ): Promise<AuthMethod> {
-    const ethWalletProvider = getEthWalletProvider();
-    return await ethWalletProvider.authenticate({ address, signMessage });
+    let ethAddress = address;
+    let signFn = signMessage;
+
+    if (!ethAddress || !signFn) {
+      if (typeof window === 'undefined' || !(window as any).ethereum) {
+        throw new Error('No injected wallet found.');
+      }
+
+      const provider = new BrowserProvider((window as any).ethereum);
+      await provider.send('eth_requestAccounts', []);
+
+      const walletSigner = await provider.getSigner();
+      ethAddress = await walletSigner.getAddress();
+      signFn = (msg: string) => walletSigner.signMessage(msg);
+    }
+
+    const message = `Sign in to Y8 App at ${new Date().toISOString()}`;
+    const signature = await signFn(message);
+
+    return {
+      authMethodType: AuthMethodType.EthWallet,
+      accessToken: JSON.stringify({
+        address: ethAddress,
+        signedMessage: message,
+        signature,
+      }),
+      userId: ethAddress,
+      expiresIn: 0,
+      authMethodScopes: [AuthMethodScope.SignAnything],
+    };
   }
   
   /**

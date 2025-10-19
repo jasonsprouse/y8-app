@@ -1,6 +1,6 @@
 {
   "name": "y8-app",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "description": "y8 app",
   "main": "index.js",
   "scripts": {
@@ -26,6 +26,7 @@
     "@stytch/nextjs": "^21.4.4",
     "@stytch/vanilla-js": "^5.22.5",
     "@tanstack/react-query": "^5.74.4",
+    "@vercel/analytics": "^1.5.0",
     "@walletconnect/modal": "^2.7.0",
     "ethers": "6.13.6",
     "framer-motion": "^12.6.3",
@@ -39,7 +40,7 @@
     "remark-html": "^16.0.1",
     "siwe": "^3.0.0",
     "viem": "^2.27.3",
-    "wagmi": "^2.14.16"
+    "wagmi": "2.18.1"
   },
   "volta": {
     "node": "18.18.0",
