@@ -6,8 +6,8 @@ This document summarizes the Web3Modal (Reown AppKit v5) integration for the Y8 
 ## Changes Made
 
 ### 1. Installed Web3Modal Packages
-- `@web3modal/wagmi@^5.1.0` - Web3Modal integration for wagmi v2
-- `@web3modal/siwe@^5.1.0` - Sign-In with Ethereum support
+- `@web3modal/wagmi@^5.1.11` - Web3Modal integration for wagmi v2
+- `@web3modal/siwe@^5.1.11` - Sign-In with Ethereum support
 
 ### 2. Updated wagmi Configuration (`config/wagmi.ts`)
 **Changes:**
@@ -133,10 +133,11 @@ return {
 ## Environment Variables Required
 
 ```bash
+# Required for Web3Modal to function - get from https://cloud.walletconnect.com/
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
 ```
 
-Get your project ID from: https://cloud.walletconnect.com/
+**Note**: While the code has a fallback to an empty string if this variable is not set, Web3Modal will not function properly without a valid project ID. You must obtain a free project ID from WalletConnect Cloud to enable wallet connections.
 
 ## Benefits
 
