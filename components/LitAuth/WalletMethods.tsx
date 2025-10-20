@@ -15,7 +15,17 @@ const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
   const isMounted = useIsMounted();
   const { connectors, connect } = useConnect();
   const { isConnected, connector: activeConnector } = useAccount();
-  const { open } = useWeb3Modal();
+  
+  // Try to get useWeb3Modal, but handle the case where it's not available
+  let web3ModalOpen: (() => Promise<void>) | null = null;
+  try {
+    const { open } = useWeb3Modal();
+    web3ModalOpen = open;
+  } catch (error) {
+    // Web3Modal not initialized - will fall back to direct connectors
+    console.warn('Web3Modal not available:', error);
+  }
+  
   const authenticationAttempted = useRef(false);
 
   // When wallet connects via Web3Modal, authenticate with Lit
@@ -31,7 +41,12 @@ const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
   if (!isMounted) return null;
 
   const handleWeb3ModalOpen = async () => {
-    await open();
+    if (web3ModalOpen) {
+      await web3ModalOpen();
+    } else {
+      console.error('Web3Modal is not available. Please set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID environment variable.');
+      alert('Web3Modal is not configured. Please use one of the direct wallet connection options below.');
+    }
   };
 
   return (
