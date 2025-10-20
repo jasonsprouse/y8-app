@@ -1,8 +1,8 @@
 "use client";
 
-import { useConnect, useAccount } from 'wagmi';
+import { useConnect, useAccount, useDisconnect } from 'wagmi';
 import { useIsMounted } from '../../hooks/useIsMounted';
-import { useWeb3Modal } from '@web3modal/wagmi/react';
+import { useWeb3Modal, useWeb3ModalState, useWalletInfo } from '@web3modal/wagmi/react';
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 
@@ -14,13 +14,24 @@ interface WalletMethodsProps {
 const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
   const isMounted = useIsMounted();
   const { connectors, connect } = useConnect();
-  const { isConnected, connector: activeConnector } = useAccount();
+  const { isConnected, connector: activeConnector, address } = useAccount();
+  const { disconnect } = useDisconnect();
   
-  // Try to get useWeb3Modal, but handle the case where it's not available
-  let web3ModalOpen: (() => Promise<void>) | null = null;
+  // Use all available Web3Modal hooks for full compliance
+  let web3ModalOpen: ((options?: { view?: 'Account' | 'Connect' | 'Networks' | 'ApproveTransaction' | 'OnRampProviders' }) => Promise<void>) | null = null;
+  let web3ModalClose: (() => Promise<void>) | null = null;
+  let modalState = { open: false, loading: false };
+  let walletInfo: { walletInfo: any } = { walletInfo: undefined };
+  
   try {
-    const { open } = useWeb3Modal();
+    const { open, close } = useWeb3Modal();
+    const state = useWeb3ModalState();
+    const info = useWalletInfo();
+    
     web3ModalOpen = open;
+    web3ModalClose = close;
+    modalState = state;
+    walletInfo = info;
   } catch (error) {
     // Web3Modal not initialized - will fall back to direct connectors
     console.warn('Web3Modal not available:', error);
@@ -40,12 +51,47 @@ const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
 
   if (!isMounted) return null;
 
-  const handleWeb3ModalOpen = async () => {
+  // Handler to open Web3Modal with Connect view
+  const handleWeb3ModalConnect = async () => {
     if (web3ModalOpen) {
-      await web3ModalOpen();
+      await web3ModalOpen({ view: 'Connect' });
     } else {
       console.error('Web3Modal is not available. Please set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID environment variable.');
       alert('Web3Modal is not configured. Please use one of the direct wallet connection options below.');
+    }
+  };
+
+  // Handler to open Web3Modal with Account view
+  const handleWeb3ModalAccount = async () => {
+    if (web3ModalOpen) {
+      await web3ModalOpen({ view: 'Account' });
+    } else {
+      console.error('Web3Modal is not available.');
+    }
+  };
+
+  // Handler to open Web3Modal with Networks view
+  const handleWeb3ModalNetworks = async () => {
+    if (web3ModalOpen) {
+      await web3ModalOpen({ view: 'Networks' });
+    } else {
+      console.error('Web3Modal is not available.');
+    }
+  };
+
+  // Handler to close Web3Modal
+  const handleWeb3ModalClose = async () => {
+    if (web3ModalClose) {
+      await web3ModalClose();
+    }
+  };
+
+  // Handler to disconnect wallet
+  const handleDisconnect = async () => {
+    disconnect();
+    // Close modal if open
+    if (modalState.open && web3ModalClose) {
+      await web3ModalClose();
     }
   };
 
@@ -56,33 +102,166 @@ const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
         Connect your wallet then sign a message to verify you&apos;re the owner
         of the address.
       </p>
-      <div className="buttons-container">
-        {/* Web3Modal Button - Primary method */}
-        <button
-          type="button"
-          className="btn btn--primary"
-          onClick={handleWeb3ModalOpen}
-        >
-          <div className="btn__icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3"
-              />
-            </svg>
-          </div>
-          <span className="btn__label">Connect Wallet</span>
-        </button>
+      
+      {/* Display connected wallet info if available */}
+      {isConnected && address && (
+        <div className="wallet-info" style={{ 
+          padding: '1rem', 
+          marginBottom: '1rem', 
+          backgroundColor: '#f5f5f5', 
+          borderRadius: '8px',
+          border: '1px solid #ddd'
+        }}>
+          <h3 style={{ marginTop: 0 }}>Connected Wallet</h3>
+          <p style={{ marginBottom: '0.5rem' }}>
+            <strong>Address:</strong> {address.slice(0, 6)}...{address.slice(-4)}
+          </p>
+          {walletInfo.walletInfo && (
+            <p style={{ marginBottom: '0.5rem' }}>
+              <strong>Wallet:</strong> {walletInfo.walletInfo.name || 'Unknown'}
+            </p>
+          )}
+          {activeConnector && (
+            <p style={{ marginBottom: 0 }}>
+              <strong>Connector:</strong> {activeConnector.name}
+            </p>
+          )}
+        </div>
+      )}
 
-        {/* Fallback direct connector buttons */}
-        {connectors.map(connector => (
+      <div className="buttons-container">
+        {/* Web3Modal Connect Button - Primary method for connecting */}
+        {!isConnected && (
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={handleWeb3ModalConnect}
+          >
+            <div className="btn__icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3"
+                />
+              </svg>
+            </div>
+            <span className="btn__label">Connect Wallet</span>
+          </button>
+        )}
+
+        {/* Web3Modal Account Button - Opens account view when connected */}
+        {isConnected && (
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={handleWeb3ModalAccount}
+          >
+            <div className="btn__icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
+            <span className="btn__label">View Account</span>
+          </button>
+        )}
+
+        {/* Web3Modal Networks Button - Opens network selection */}
+        {isConnected && (
+          <button
+            type="button"
+            className="btn btn--outline"
+            onClick={handleWeb3ModalNetworks}
+          >
+            <div className="btn__icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"
+                />
+              </svg>
+            </div>
+            <span className="btn__label">Switch Network</span>
+          </button>
+        )}
+
+        {/* Disconnect Button - Disconnects the wallet */}
+        {isConnected && (
+          <button
+            type="button"
+            className="btn btn--outline"
+            onClick={handleDisconnect}
+          >
+            <div className="btn__icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5.636 5.636a9 9 0 1012.728 0M12 3v9"
+                />
+              </svg>
+            </div>
+            <span className="btn__label">Disconnect</span>
+          </button>
+        )}
+
+        {/* Close Modal Button - Closes Web3Modal if it's open */}
+        {modalState.open && (
+          <button
+            type="button"
+            className="btn btn--outline"
+            onClick={handleWeb3ModalClose}
+          >
+            <div className="btn__icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </div>
+            <span className="btn__label">Close Modal</span>
+          </button>
+        )}
+
+        {/* Fallback direct connector buttons - shown when not connected */}
+        {!isConnected && connectors.map(connector => (
           <button
             type="button"
             className="btn btn--outline"
@@ -111,6 +290,7 @@ const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
             <span className="btn__label">Continue with {connector.name}</span>
           </button>
         ))}
+        
         <button onClick={() => setView('default')} className="btn btn--link">
           Back
         </button>
