@@ -84,7 +84,22 @@ Follow your platform's documentation for setting environment variables.
 
 - **`components/Providers.tsx`**: Conditionally initializes Web3Modal only when projectId is available
 - **`components/LitAuth/WalletMethods.tsx`**: Handles missing Web3Modal gracefully with try-catch
-- **`config/wagmi.ts`**: Exports projectId for use in Web3Modal initialization
+- **`config/wagmi.ts`**: Configures wagmi connectors WITHOUT manual walletConnect connector (Web3Modal v5 handles this internally)
+
+### Important: Web3Modal v5 (Reown AppKit) Integration
+
+**Key Change**: The `walletConnect` connector is NO LONGER manually added to the wagmi config. This is because:
+
+1. **Web3Modal v5 (now Reown AppKit) automatically manages the WalletConnect integration**
+2. Manually adding the `walletConnect` connector can cause conflicts and connection issues
+3. Web3Modal handles all WalletConnect functionality internally when `createWeb3Modal()` is called
+
+The wagmi config now only includes browser-based connectors:
+- `injected` - For browser extension wallets
+- `metaMask` - For MetaMask specifically
+- `coinbaseWallet` - For Coinbase Wallet
+
+Web3Modal automatically provides WalletConnect support on top of these connectors.
 
 ### Error Handling Flow
 
