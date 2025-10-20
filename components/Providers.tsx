@@ -9,9 +9,12 @@ import { wagmiConfig, projectId, metadata } from '../config/wagmi';
 
 const queryClient = new QueryClient();
 
+// Global flag to ensure Web3Modal is only initialized once
+let web3ModalInitialized = false;
+
 // Initialize Web3Modal only if projectId is available
 // This prevents errors when NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set
-if (typeof window !== 'undefined' && projectId) {
+if (typeof window !== 'undefined' && projectId && !web3ModalInitialized) {
   try {
     createWeb3Modal({
       wagmiConfig,
@@ -22,6 +25,7 @@ if (typeof window !== 'undefined' && projectId) {
       },
       enableAnalytics: false,
     });
+    web3ModalInitialized = true;
   } catch (error) {
     console.error('Failed to initialize Web3Modal:', error);
   }
