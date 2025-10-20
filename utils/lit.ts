@@ -48,6 +48,7 @@ import {
   
   const litRelay = new LitRelay({
     relayUrl: LitRelay.getRelayUrl(SELECTED_LIT_NETWORK),
+    relayApiKey: 'test-api-key',
   });
   
   let googleProvider: GoogleProvider;
