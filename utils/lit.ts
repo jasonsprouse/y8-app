@@ -21,8 +21,6 @@ import {
     LIT_NETWORKS_KEYS,
   } from '@lit-protocol/types';
   import { LitPKPResource } from '@lit-protocol/auth-helpers';
-  import { ethers } from 'ethers';
-  import { BrowserProvider } from 'ethers';
   
   export const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN || 'localhost';
   export const ORIGIN =
@@ -251,35 +249,10 @@ import {
    */
   export async function authenticateWithEthWallet(
     address?: string,
-    signMessage?: (message: string) => Promise<string>,
+    signMessage?: (message: string) => Promise<string>
   ): Promise<AuthMethod> {
-    let ethAddress = address;
-    let signFn = signMessage;
-
-    if (!ethAddress || !signFn) {
-      if (typeof window === 'undefined' || !(window as any).ethereum) {
-        throw new Error('No injected wallet found.');
-      }
-
-      const provider = new BrowserProvider((window as any).ethereum);
-      await provider.send('eth_requestAccounts', []);
-
-      const walletSigner = await provider.getSigner();
-      ethAddress = await walletSigner.getAddress();
-      signFn = (msg: string) => walletSigner.signMessage(msg);
-    }
-
-    const message = `Sign in to Y8 App at ${new Date().toISOString()}`;
-    const signature = await signFn(message);
-
-    return {
-      authMethodType: AuthMethodType.EthWallet,
-      accessToken: JSON.stringify({
-        address: ethAddress,
-        signedMessage: message,
-        signature,
-      }),
-    };
+    const ethWalletProvider = getEthWalletProvider();
+    return await ethWalletProvider.authenticate({ address, signMessage });
   }
   
   /**
