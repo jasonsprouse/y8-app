@@ -1,7 +1,8 @@
 import { createConfig, http } from 'wagmi';
 import { mainnet, polygon, optimism } from 'wagmi/chains';
-import { walletConnect, injected, coinbaseWallet, metaMask } from 'wagmi/connectors';
+import { injected, coinbaseWallet, metaMask } from 'wagmi/connectors';
 
+// Export projectId and metadata for Web3Modal initialization
 export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
 
 if (!projectId) {
@@ -17,14 +18,12 @@ export const metadata = {
 
 const chains = [mainnet, polygon, optimism] as const;
 
+// Note: Web3Modal v5 (Reown AppKit) automatically handles WalletConnect connector
+// Do NOT manually add walletConnect connector here as it will cause conflicts
+// Web3Modal manages the WalletConnect integration internally when createWeb3Modal is called
 export const wagmiConfig = createConfig({
   chains,
   connectors: [
-    walletConnect({ 
-      projectId,
-      metadata,
-      showQrModal: false, // Web3Modal will handle the QR modal
-    }),
     injected({ shimDisconnect: true }),
     metaMask(),
     coinbaseWallet({
