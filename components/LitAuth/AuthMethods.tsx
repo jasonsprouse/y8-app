@@ -1,4 +1,6 @@
 import Image from 'next/image';
+import WalletMethods from './WalletMethods';
+import { authenticateWithEthWallet } from '../../utils/lit';
 
 interface AuthMethodsProps {
   handleGoogleLogin: () => Promise<void>;
@@ -9,6 +11,7 @@ interface AuthMethodsProps {
 const AuthMethods = ({
   handleGoogleLogin,
   handleDiscordLogin,
+  handleLoginWithEthWallet,
   setView,
 }: AuthMethodsProps) => {
   return (
@@ -111,7 +114,7 @@ const AuthMethods = ({
         <button
           type="button"
           className="btn btn--outline"
-          onClick={() => setView('webauthn')}
+          onClick={() => authenticateWithEthWallet()}
         >
           <div className="btn__icon">
             <svg

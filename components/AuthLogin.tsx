@@ -139,6 +139,7 @@ export default function AuthLogin() {
           <LoginMethods
             handleGoogleLogin={loginWithGoogle}
             handleDiscordLogin={loginWithDiscord}
+            handleLoginWithEthWallet={loginWithEthWallet}
             authWithEthWallet={loginWithEthWallet}
             authWithWebAuthn={loginWithWebAuthn}
             authWithStytch={loginWithStytchOtp}

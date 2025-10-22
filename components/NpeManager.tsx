@@ -94,8 +94,11 @@ const NpeManager = () => {
   };
 
   useEffect(() => {
-    if (authMethod) {
+    if (allPkps.length === 0) {
       fetchPkps();
+    }
+    else { 
+      setIsFetching(false); 
     }
   }, [authMethod]);
 
