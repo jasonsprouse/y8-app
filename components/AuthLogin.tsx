@@ -11,8 +11,7 @@ import AccountSelection from './LitAuth/AccountSelection';
 import CreateAccount from './LitAuth/CreateAccount';
 import Loading from './LitAuth/Loading';
 import styles from '../styles/AuthLogin.module.css';
-
-type AuthView = 'login' | 'signup' | 'email' | 'phone' | 'wallet' | 'webauthn' | 'create-account';
+import type { AuthView } from '../types/AuthView';
 
 export default function AuthLogin() {
   const { 
@@ -124,7 +123,7 @@ export default function AuthLogin() {
           />
         );
       
-      case 'webauthn':
+      case 'webAuthn':
         return (
           <WebAuthn
             start={'authenticate'}
@@ -139,7 +138,6 @@ export default function AuthLogin() {
           <LoginMethods
             handleGoogleLogin={loginWithGoogle}
             handleDiscordLogin={loginWithDiscord}
-            handleLoginWithEthWallet={loginWithEthWallet}
             authWithEthWallet={loginWithEthWallet}
             authWithWebAuthn={loginWithWebAuthn}
             authWithStytch={loginWithStytchOtp}

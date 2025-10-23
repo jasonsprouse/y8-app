@@ -6,12 +6,15 @@ import { useWeb3Modal, useWeb3ModalState, useWalletInfo } from '@web3modal/wagmi
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { authenticateWithEthWallet } from '../../utils/lit';
+import type { AuthView } from '../../types/AuthView';
+
 
 interface WalletMethodsProps {
-  setView: React.Dispatch<React.SetStateAction<string>>;
+  authWithEthWallet: () => Promise<void>;
+  setView: React.Dispatch<React.SetStateAction<AuthView>>;
 }
 
-const WalletMethods = ({ setView }: WalletMethodsProps) => {
+const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
   const isMounted = useIsMounted();
   const { connectors, connect } = useConnect();
   const { isConnected, connector: activeConnector, address } = useAccount();
@@ -45,7 +48,7 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
       // Trigger authentication with the connected wallet
       // The authenticateWithEthWallet function will use window.ethereum automatically
       authenticationAttempted.current = true;
-      authenticateWithEthWallet().catch((error) => {
+      authWithEthWallet().catch((error) => {
         console.error('Error authenticating with wallet:', error);
         // Reset the flag if authentication fails, so it can be retried
         authenticationAttempted.current = false;
@@ -295,7 +298,7 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
           </button>
         ))}
         
-        <button onClick={() => setView('default')} className="btn btn--link">
+        <button onClick={() => setView('login')} className="btn btn--link">
           Back
         </button>
       </div>

@@ -33,7 +33,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { WagmiConfig } from 'wagmi';
+import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createWeb3Modal } from '@web3modal/wagmi/react';
 import { wagmiConfig, chains, projectId } from '../config/wagmi';
@@ -51,16 +51,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       createWeb3Modal({
         wagmiConfig,
         projectId,
-        chains,
       });
     }
   }, []);
 
   return (
-    <WagmiConfig config={wagmiConfig}>
+    <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>{children}</AuthProvider>
       </QueryClientProvider>
-    </WagmiConfig>
+    </WagmiProvider>
   );
 }

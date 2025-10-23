@@ -1,29 +1,5 @@
-// import { createConfig, http } from 'wagmi';
-// import { mainnet, polygon, optimism } from 'wagmi/chains';
-// import { metaMask, walletConnect, coinbaseWallet, injected } from 'wagmi/connectors';
-
-// export const wagmiConfig = createConfig({
-//   autoConnect: true,
-//   chains: [mainnet, polygon, optimism],
-//   connectors: [
-//     metaMask(),
-//     walletConnect({
-//       projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'your-project-id',
-//     }),
-//     coinbaseWallet({
-//       appName: 'Y8 App',
-//     }),
-//     injected(),
-//   ],
-//   transports: {
-//     [mainnet.id]: http(),
-//     [polygon.id]: http(),
-//     [optimism.id]: http(),
-//   },
-// });
-
 import { createConfig, http } from 'wagmi';
-import { mainnet, polygon, optimism } from 'wagmi/chains';
+import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
 import { walletConnect, injected, coinbaseWallet, metaMask } from 'wagmi/connectors';
 
 export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
@@ -39,7 +15,8 @@ export const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/37784886'],
 };
 
-const chains = [mainnet, polygon, optimism] as const;
+// Directly define chains array as a tuple
+export const chains = [mainnet, polygon, optimism, arbitrum] as const;
 
 export const wagmiConfig = createConfig({
   chains,
@@ -47,7 +24,7 @@ export const wagmiConfig = createConfig({
     walletConnect({ 
       projectId,
       metadata,
-      showQrModal: false, // Web3Modal will handle the QR modal
+      showQrModal: false,
     }),
     injected({ shimDisconnect: true }),
     metaMask(),
@@ -60,6 +37,7 @@ export const wagmiConfig = createConfig({
     [mainnet.id]: http(),
     [polygon.id]: http(),
     [optimism.id]: http(),
+    [arbitrum.id]: http(),
   },
   ssr: true,
 });

@@ -4,6 +4,8 @@ import AuthMethods from './AuthMethods';
 import WalletMethods from './WalletMethods';
 import WebAuthn from './WebAuthn';
 import StytchOTP from './StytchOTP';
+import { AuthView } from '../../types/AuthView';
+
 
 interface LoginProps {
   handleGoogleLogin: () => Promise<void>;
@@ -15,8 +17,6 @@ interface LoginProps {
   error?: Error;
 }
 
-type AuthView = 'default' | 'email' | 'phone' | 'wallet' | 'webauthn';
-
 export default function LoginMethods({
   handleGoogleLogin,
   handleDiscordLogin,
@@ -26,7 +26,7 @@ export default function LoginMethods({
   signUp,
   error,
 }: LoginProps) {
-  const [view, setView] = useState<AuthView>('default');
+  const [view, setView] = useState<AuthView>('login');
 
   return (
     <div className="container">
@@ -36,7 +36,7 @@ export default function LoginMethods({
             <p>{error.message}</p>
           </div>
         )}
-        {view === 'default' && (
+        {view === 'login' && (
           <>
             <h1>Welcome back</h1>
             <p>Access your Lit wallet.</p>
@@ -72,7 +72,7 @@ export default function LoginMethods({
             setView={setView}
           />
         )}
-        {view === 'webauthn' && (
+        {view === 'webAuthn' && (
           <WebAuthn
             start={'authenticate'}
             authWithWebAuthn={authWithWebAuthn}

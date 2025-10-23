@@ -5,6 +5,7 @@ import WalletMethods from './WalletMethods';
 import WebAuthn from './WebAuthn';
 import StytchOTP from './StytchOTP';
 import { SELECTED_LIT_NETWORK } from '../../utils/lit';
+import { AuthView } from '../../types/AuthView';
 
 interface SignUpProps {
   handleGoogleLogin: () => Promise<void>;
@@ -17,8 +18,6 @@ interface SignUpProps {
   error?: Error;
 }
 
-type AuthView = 'default' | 'email' | 'phone' | 'wallet' | 'webauthn';
-
 export default function SignUpMethods({
   handleGoogleLogin,
   handleDiscordLogin,
@@ -29,7 +28,7 @@ export default function SignUpMethods({
   goToLogin,
   error,
 }: SignUpProps) {
-  const [view, setView] = useState<AuthView>('default');
+  const [view, setView] = useState<AuthView>('signup');
 
   return (
     <div className="container">
@@ -39,7 +38,7 @@ export default function SignUpMethods({
             <p>{error.message}</p>
           </div>
         )}
-        {view === 'default' && (
+        {view === 'signup' && (
           <>
             <h1>Get started on the {SELECTED_LIT_NETWORK} network</h1>
             <p>
@@ -83,7 +82,7 @@ export default function SignUpMethods({
             setView={setView}
           />
         )}
-        {view === 'webauthn' && (
+        {view === 'webAuthn' && (
           <WebAuthn
             start={'register'}
             authWithWebAuthn={authWithWebAuthn}

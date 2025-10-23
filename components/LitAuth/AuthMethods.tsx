@@ -11,7 +11,6 @@ interface AuthMethodsProps {
 const AuthMethods = ({
   handleGoogleLogin,
   handleDiscordLogin,
-  handleLoginWithEthWallet,
   setView,
 }: AuthMethodsProps) => {
   return (
