@@ -5,20 +5,20 @@ import { useIsMounted } from '../../hooks/useIsMounted';
 import { useWeb3Modal, useWeb3ModalState, useWalletInfo } from '@web3modal/wagmi/react';
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { authenticateWithEthWallet } from '../../utils/lit';
+import useAuthenticate from '../../hooks/useAuthenticate';
 import type { AuthView } from '../../types/AuthView';
 
 
 interface WalletMethodsProps {
-  authWithEthWallet: () => Promise<void>;
   setView: React.Dispatch<React.SetStateAction<AuthView>>;
 }
 
-const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
+const WalletMethods = ({ setView }: WalletMethodsProps) => {
   const isMounted = useIsMounted();
   const { connectors, connect } = useConnect();
   const { isConnected, connector: activeConnector, address } = useAccount();
   const { disconnect } = useDisconnect();
+  const { authWithEthWallet } = useAuthenticate(); // <-- Use the hook here
   
   // Use all available Web3Modal hooks for full compliance
   let web3ModalOpen: ((options?: { view?: 'Account' | 'Connect' | 'Networks' | 'ApproveTransaction' | 'OnRampProviders' }) => Promise<void>) | null = null;
@@ -48,13 +48,13 @@ const WalletMethods = ({ authWithEthWallet, setView }: WalletMethodsProps) => {
       // Trigger authentication with the connected wallet
       // The authenticateWithEthWallet function will use window.ethereum automatically
       authenticationAttempted.current = true;
-      authWithEthWallet().catch((error) => {
+      authWithEthWallet(activeConnector).catch((error) => {
         console.error('Error authenticating with wallet:', error);
         // Reset the flag if authentication fails, so it can be retried
         authenticationAttempted.current = false;
       });
     }
-  }, [isConnected, activeConnector]);
+  }, [isConnected, activeConnector, authWithEthWallet]);
 
   if (!isMounted) return null;
 
