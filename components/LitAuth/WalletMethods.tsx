@@ -22,24 +22,10 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
   const { loginWithEthWallet } = useAuth(); // Use AuthContext
   
   // Use all available Web3Modal hooks for full compliance
-  let web3ModalOpen: ((options?: { view?: 'Account' | 'Connect' | 'Networks' | 'ApproveTransaction' | 'OnRampProviders' }) => Promise<void>) | null = null;
-  let web3ModalClose: (() => Promise<void>) | null = null;
-  let modalState = { open: false, loading: false };
-  let walletInfo: { walletInfo: any } = { walletInfo: undefined };
-  
-  try {
-    const { open, close } = useWeb3Modal();
-    const state = useWeb3ModalState();
-    const info = useWalletInfo();
-    
-    web3ModalOpen = open;
-    web3ModalClose = close;
-    modalState = state;
-    walletInfo = info;
-  } catch (error) {
-    // Web3Modal not initialized - will fall back to direct connectors
-    console.warn('Web3Modal not available:', error);
-  }
+  // Hooks must be called unconditionally at the top level
+  const { open: web3ModalOpen, close: web3ModalClose } = useWeb3Modal();
+  const modalState = useWeb3ModalState();
+  const walletInfo = useWalletInfo();
   
   const authenticationAttempted = useRef(false);
 
