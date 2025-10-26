@@ -424,6 +424,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('lit-auth-method');
     localStorage.removeItem('lit-pkp');
     localStorage.removeItem('lit-session-sigs');
+    localStorage.removeItem('lit-session');
 
     router.push('/');
   }, [router]);
