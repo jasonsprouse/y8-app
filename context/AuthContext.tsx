@@ -41,7 +41,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   loginWithDiscord: () => Promise<void>;
   loginWithWebAuthn: () => Promise<void>;
-  loginWithEthWallet: () => Promise<void>;
+  loginWithEthWallet: (address?: string, signMessage?: (message: string) => Promise<string>) => Promise<void>;
   loginWithStytchOtp: (method: 'email' | 'phone') => Promise<void>;
   registerWebAuthn: () => Promise<IRelayPKP | undefined>;
   logOut: () => void;
@@ -147,8 +147,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
       
-      setPKPState(newPKP);
+      // Set all states
       setAuthMethod(newAuthMethod);
+      setPKPState(newPKP);
       setSessionSigsState(sessionSigsResult);
       setIsAuthenticated(true);
       setPendingPkpSelection(false);
@@ -156,9 +157,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentAuthMethodForPkpSelection(null);
       setNeedsToCreateAccount(false);
       
+      // Store in localStorage
       localStorage.setItem('lit-auth-method', JSON.stringify(newAuthMethod));
       localStorage.setItem('lit-pkp', JSON.stringify(newPKP));
       localStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigsResult));
+      localStorage.setItem('lit-session', 'true');
 
       if (shouldRedirect) {
         router.push('/space');
@@ -314,12 +317,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [updateSession]);
 
   // Login with Ethereum Wallet
-  const loginWithEthWallet = useCallback(async () => {
+  const loginWithEthWallet = useCallback(async (address?: string, signMessage?: (message: string) => Promise<string>) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const result = await authenticateWithEthWallet();
+      const result = await authenticateWithEthWallet(address, signMessage);
       const pkps = await getPKPs(result);
       
       if (!pkps || pkps.length === 0) {
