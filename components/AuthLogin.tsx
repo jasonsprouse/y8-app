@@ -118,7 +118,6 @@ export default function AuthLogin() {
       case 'wallet':
         return (
           <WalletMethods
-            authWithEthWallet={loginWithEthWallet}
             setView={setAuthView}
           />
         );

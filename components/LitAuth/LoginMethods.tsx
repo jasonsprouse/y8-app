@@ -68,7 +68,6 @@ export default function LoginMethods({
         )}
         {view === 'wallet' && (
           <WalletMethods
-            authWithEthWallet={authWithEthWallet}
             setView={setView}
           />
         )}

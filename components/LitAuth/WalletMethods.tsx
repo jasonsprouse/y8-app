@@ -1,16 +1,15 @@
 "use client";
 
-import { useConnect, useAccount, useDisconnect } from 'wagmi';
+import { useConnect, useAccount, useDisconnect, useSignMessage } from 'wagmi';
 import { useIsMounted } from '../../hooks/useIsMounted';
 import { useWeb3Modal, useWeb3ModalState, useWalletInfo } from '@web3modal/wagmi/react';
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
-import useAuthenticate from '../../hooks/useAuthenticate';
+import { useAuth } from '../../context/AuthContext';
 import type { AuthView } from '../../types/AuthView';
 
 
 interface WalletMethodsProps {
-  authWithEthWallet?: () => Promise<void>;
   setView: React.Dispatch<React.SetStateAction<AuthView>>;
 }
 
@@ -19,7 +18,8 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
   const { connectors, connect } = useConnect();
   const { isConnected, connector: activeConnector, address } = useAccount();
   const { disconnect } = useDisconnect();
-  const { authWithEthWallet } = useAuthenticate(); // <-- Use the hook here
+  const { signMessageAsync } = useSignMessage();
+  const { loginWithEthWallet } = useAuth(); // Use AuthContext
   
   // Use all available Web3Modal hooks for full compliance
   let web3ModalOpen: ((options?: { view?: 'Account' | 'Connect' | 'Networks' | 'ApproveTransaction' | 'OnRampProviders' }) => Promise<void>) | null = null;
@@ -43,19 +43,33 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
   
   const authenticationAttempted = useRef(false);
 
-  // When wallet connects via Web3Modal, authenticate with Lit
+  // When wallet connects via Web3Modal, authenticate with Lit using AuthContext
   useEffect(() => {
-    if (isConnected && activeConnector && !authenticationAttempted.current) {
+    if (isConnected && activeConnector && address && !authenticationAttempted.current) {
       // Trigger authentication with the connected wallet
-      // The authenticateWithEthWallet function will use window.ethereum automatically
       authenticationAttempted.current = true;
-      authWithEthWallet(activeConnector).catch((error) => {
-        console.error('Error authenticating with wallet:', error);
-        // Reset the flag if authentication fails, so it can be retried
-        authenticationAttempted.current = false;
-      });
+      
+      // Create a signMessage function using wagmi's signMessageAsync
+      (async () => {
+        try {
+          const signMessage = async (message: string) => {
+            const sig = await signMessageAsync({ 
+              message,
+              account: address
+            });
+            return sig;
+          };
+          
+          // Call AuthContext's loginWithEthWallet with address and signMessage
+          await loginWithEthWallet(address, signMessage);
+        } catch (error) {
+          console.error('Error authenticating with wallet:', error);
+          // Reset the flag if authentication fails, so it can be retried
+          authenticationAttempted.current = false;
+        }
+      })();
     }
-  }, [isConnected, activeConnector, authWithEthWallet]);
+  }, [isConnected, activeConnector, address, loginWithEthWallet, signMessageAsync]);
 
   if (!isMounted) return null;
 
