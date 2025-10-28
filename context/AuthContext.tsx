@@ -137,12 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } as LitResourceAbilityRequest,
           ],
           authNeededCallback: async () => {
-            return {
-              sig: "",
-              derivedVia: "web3.eth.personal.sign",
-              signedMessage: `Authentication at ${Date.now()}`,
-              address: newPKP.ethAddress,
-            };
+            throw new Error('Session expired. Please re-authenticate.');
           },
         },
       });

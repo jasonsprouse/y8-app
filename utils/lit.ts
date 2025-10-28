@@ -23,10 +23,38 @@ import {
   import { LitPKPResource } from '@lit-protocol/auth-helpers';
   
   export const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN || 'localhost';
-  export const ORIGIN =
-    process.env.NEXT_PUBLIC_VERCEL_ENV === 'production'
-      ? `https://${DOMAIN}`
-      : `http://${DOMAIN}:3000`;
+  
+  // Build a safe ORIGIN for both browser and server
+  export const ORIGIN = (() => {
+    // In browser, always use window.location.origin
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    
+    // On server, try NEXT_PUBLIC_ORIGIN first
+    const envOrigin = process.env.NEXT_PUBLIC_ORIGIN;
+    if (envOrigin) {
+      return envOrigin;
+    }
+    
+    // Fall back to building from DOMAIN
+    const host = DOMAIN.trim();
+    
+    // If DOMAIN already has protocol, use it as-is
+    if (/^https?:\/\//i.test(host)) {
+      return host;
+    }
+    
+    // If DOMAIN has a port, add http://
+    if (host.includes(':')) {
+      return `http://${host}`;
+    }
+    
+    // Default: add http:// and port 3000
+    return `http://${host}:3000`;
+  })();
+  
+  console.log('🔧 Lit Protocol ORIGIN:', ORIGIN); // <-- Add this to debug
   
   export const SELECTED_LIT_NETWORK = 
     (process.env.NEXT_PUBLIC_LIT_NETWORK as LIT_NETWORKS_KEYS) || 
@@ -252,8 +280,14 @@ import {
     address?: string,
     signMessage?: (message: string) => Promise<string>
   ): Promise<AuthMethod> {
-    const ethWalletProvider = getEthWalletProvider();
-    return await ethWalletProvider.authenticate({ address, signMessage });
+    const provider = getEthWalletProvider();
+    
+    console.log('🔐 Authenticating with wallet, ORIGIN:', ORIGIN); // <-- Add this to debug
+    
+    return provider.authenticate({
+      address,
+      signMessage,
+    } as any);
   }
   
   /**
