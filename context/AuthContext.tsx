@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentAuthMethodForPkpSelection, setCurrentAuthMethodForPkpSelection] = useState<AuthMethod | null>(null);
   const [needsToCreateAccount, setNeedsToCreateAccount] = useState<boolean>(false);
   
-  // Initialize auth state from localStorage
+  // Initialize auth state from storage
   useEffect(() => {
     const loadAuth = async () => {
       try {
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const storedAuthMethod = localStorage.getItem('lit-auth-method');
         const storedPKP = localStorage.getItem('lit-pkp');
-        const storedSessionSigs = localStorage.getItem('lit-session-sigs');
+        const storedSessionSigs = sessionStorage.getItem('lit-session-sigs'); // Changed to sessionStorage
         
         if (storedAuthMethod && storedPKP && storedSessionSigs) {
           setAuthMethod(JSON.parse(storedAuthMethod));
@@ -152,11 +152,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentAuthMethodForPkpSelection(null);
       setNeedsToCreateAccount(false);
       
-      // Store in localStorage
+      // Store auth method and PKP in localStorage (persistent)
       localStorage.setItem('lit-auth-method', JSON.stringify(newAuthMethod));
       localStorage.setItem('lit-pkp', JSON.stringify(newPKP));
-      localStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigsResult));
       localStorage.setItem('lit-session', 'true');
+      
+      // Store session sigs in sessionStorage (cleared on tab close)
+      sessionStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigsResult)); // Changed to sessionStorage
 
       if (shouldRedirect) {
         router.push('/space');
@@ -418,8 +420,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     localStorage.removeItem('lit-auth-method');
     localStorage.removeItem('lit-pkp');
-    localStorage.removeItem('lit-session-sigs');
     localStorage.removeItem('lit-session');
+    sessionStorage.removeItem('lit-session-sigs'); // Changed to sessionStorage
 
     router.push('/');
   }, [router]);
