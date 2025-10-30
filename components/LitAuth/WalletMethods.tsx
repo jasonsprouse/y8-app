@@ -3,7 +3,7 @@
 import { useConnect, useAccount, useDisconnect, useSignMessage } from 'wagmi';
 import { useIsMounted } from '../../hooks/useIsMounted';
 import { useWeb3Modal, useWeb3ModalState, useWalletInfo } from '@web3modal/wagmi/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useAuth } from '../../context/AuthContext';
 import type { AuthView } from '../../types/AuthView';
@@ -20,25 +20,27 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
   const { isConnected, connector: activeConnector, address } = useAccount();
   const { disconnect } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
-  const { loginWithEthWallet } = useAuth(); // Use AuthContext
+  const { loginWithEthWallet } = useAuth();
   
   // Use all available Web3Modal hooks for full compliance
-  // Hooks must be called unconditionally at the top level
   const { open: web3ModalOpen, close: web3ModalClose } = useWeb3Modal();
   const modalState = useWeb3ModalState();
   const walletInfo = useWalletInfo();
   
   const authenticationAttempted = useRef(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   // When wallet connects via Web3Modal, authenticate with Lit using AuthContext
   useEffect(() => {
-    if (isConnected && activeConnector && address && !authenticationAttempted.current) {
-      // Trigger authentication with the connected wallet
+    if (isConnected && activeConnector && address && !authenticationAttempted.current && !isAuthenticating) {
       authenticationAttempted.current = true;
+      setIsAuthenticating(true);
       
       // Create a signMessage function using wagmi's signMessageAsync
       (async () => {
         try {
+          console.log('🔄 Starting Lit Protocol authentication...');
+          
           const signMessage = async (message: string) => {
             const sig = await signMessageAsync({ 
               message,
@@ -49,24 +51,57 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
           
           // Call AuthContext's loginWithEthWallet with address and signMessage
           await loginWithEthWallet(address, signMessage);
+          console.log('✅ Successfully authenticated with Lit Protocol');
+          
         } catch (error) {
-          console.error('Error authenticating with wallet:', error);
+          console.error('❌ Error authenticating with wallet:', error);
           // Reset the flag if authentication fails, so it can be retried
           authenticationAttempted.current = false;
+        } finally {
+          setIsAuthenticating(false);
         }
       })();
     }
   }, [isConnected, activeConnector, address, loginWithEthWallet, signMessageAsync]);
 
+  // Reset authentication flag when wallet disconnects
+  useEffect(() => {
+    if (!isConnected) {
+      authenticationAttempted.current = false;
+      setIsAuthenticating(false);
+    }
+  }, [isConnected]);
+
   if (!isMounted) return null;
 
-  // Handler to open Web3Modal with Connect view
+  // Handler to open Web3Modal with Connect view and trigger authentication
   const handleWeb3ModalConnect = async () => {
-    if (web3ModalOpen) {
+    try {
+      if (!web3ModalOpen) {
+        console.error('Web3Modal is not available. Please set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID environment variable.');
+        alert('Web3Modal is not configured. Please use one of the direct wallet connection options below.');
+        return;
+      }
+
+      console.log('🔄 Opening Web3Modal for wallet connection...');
       await web3ModalOpen({ view: 'Connect' });
-    } else {
-      console.error('Web3Modal is not available. Please set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID environment variable.');
-      alert('Web3Modal is not configured. Please use one of the direct wallet connection options below.');
+      
+      // Note: Authentication will happen automatically in the useEffect above
+      // when the wallet connects and address becomes available
+      
+    } catch (error) {
+      console.error('❌ Error opening Web3Modal:', error);
+    }
+  };
+
+  // Handler for direct connector authentication (fallback buttons)
+  const handleDirectConnectorAuth = async (connector: any) => {
+    try {
+      console.log(`🔄 Connecting with ${connector.name}...`);
+      await connect({ connector });
+      // Authentication will be handled by the useEffect above
+    } catch (error) {
+      console.error(`❌ Error connecting with ${connector.name}:`, error);
     }
   };
 
@@ -112,6 +147,22 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
         of the address.
       </p>
       
+      {/* Authentication status indicator */}
+      {isAuthenticating && (
+        <div className="auth-status" style={{ 
+          padding: '1rem', 
+          marginBottom: '1rem', 
+          backgroundColor: '#fff3cd', 
+          borderRadius: '8px',
+          border: '1px solid #ffeaa7',
+          color: '#856404'
+        }}>
+          <p style={{ margin: 0 }}>
+            🔄 Authenticating with Lit Protocol...
+          </p>
+        </div>
+      )}
+      
       {/* Display connected wallet info if available */}
       {isConnected && address && (
         <div className="wallet-info" style={{ 
@@ -139,12 +190,13 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
       )}
 
       <div className="buttons-container">
-        {/* Web3Modal Connect Button - Primary method for connecting */}
+        {/* Web3Modal Connect Button - Primary method for connecting and authenticating */}
         {!isConnected && (
           <button
             type="button"
             className="btn btn--primary"
             onClick={handleWeb3ModalConnect}
+            disabled={isAuthenticating}
           >
             <div className="btn__icon">
               <svg
@@ -161,7 +213,9 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
                 />
               </svg>
             </div>
-            <span className="btn__label">Connect Wallet</span>
+            <span className="btn__label">
+              {isAuthenticating ? 'Connecting...' : 'Connect Wallet'}
+            </span>
           </button>
         )}
 
@@ -274,9 +328,9 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
           <button
             type="button"
             className="btn btn--outline"
-            disabled={!connector.ready}
+            disabled={!connector.ready || isAuthenticating}
             key={connector.id}
-            onClick={() => connect({ connector })}
+            onClick={() => handleDirectConnectorAuth(connector)}
           >
             {connector.name.toLowerCase() === 'metamask' && (
               <div className="btn__icon">
@@ -284,7 +338,7 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
                   src="/metamask.png"
                   alt="MetaMask logo"
                   fill={true}
-                ></Image>
+                />
               </div>
             )}
             {connector.name.toLowerCase() === 'coinbase wallet' && (
@@ -293,10 +347,12 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
                   src="/coinbase.png"
                   alt="Coinbase logo"
                   fill={true}
-                ></Image>
+                />
               </div>
             )}
-            <span className="btn__label">Continue with {connector.name}</span>
+            <span className="btn__label">
+              Continue with {connector.name}
+            </span>
           </button>
         ))}
         
