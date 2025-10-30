@@ -78,6 +78,7 @@ export default function SignUpMethods({
         )}
         {view === 'wallet' && (
           <WalletMethods
+            authWithEthWallet={authWithEthWallet}
             setView={setView}
           />
         )}

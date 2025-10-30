@@ -10,6 +10,7 @@ import type { AuthView } from '../../types/AuthView';
 
 
 interface WalletMethodsProps {
+  authWithEthWallet: (address?: string, signMessage?: (message: string) => Promise<string>) => Promise<void>;
   setView: React.Dispatch<React.SetStateAction<AuthView>>;
 }
 
