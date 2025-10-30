@@ -387,7 +387,6 @@ import {
     try {
       const provider = getAuthenticatedProvider(authMethod);
       const allPKPs = await provider.fetchPKPsThroughRelayer(authMethod);
-      console.log('getPKPs allPKPs: ', allPKPs);
       if (!Array.isArray(allPKPs)) {
         console.error('PKPs response is not an array:', allPKPs);
         return [];
