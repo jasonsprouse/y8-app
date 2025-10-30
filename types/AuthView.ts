@@ -1,0 +1,1 @@
+export type AuthView = 'login' | 'signup' | 'email' | 'phone' | 'wallet' | 'webAuthn' | 'create-account';

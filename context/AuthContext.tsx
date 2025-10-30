@@ -41,7 +41,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   loginWithDiscord: () => Promise<void>;
   loginWithWebAuthn: () => Promise<void>;
-  loginWithEthWallet: () => Promise<void>;
+  loginWithEthWallet: (address?: string, signMessage?: (message: string) => Promise<string>) => Promise<void>;
   loginWithStytchOtp: (method: 'email' | 'phone') => Promise<void>;
   registerWebAuthn: () => Promise<IRelayPKP | undefined>;
   logOut: () => void;
@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentAuthMethodForPkpSelection, setCurrentAuthMethodForPkpSelection] = useState<AuthMethod | null>(null);
   const [needsToCreateAccount, setNeedsToCreateAccount] = useState<boolean>(false);
   
-  // Initialize auth state from localStorage
+  // Initialize auth state from storage
   useEffect(() => {
     const loadAuth = async () => {
       try {
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const storedAuthMethod = localStorage.getItem('lit-auth-method');
         const storedPKP = localStorage.getItem('lit-pkp');
-        const storedSessionSigs = localStorage.getItem('lit-session-sigs');
+        const storedSessionSigs = sessionStorage.getItem('lit-session-sigs'); // Changed to sessionStorage
         
         if (storedAuthMethod && storedPKP && storedSessionSigs) {
           setAuthMethod(JSON.parse(storedAuthMethod));
@@ -137,18 +137,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } as LitResourceAbilityRequest,
           ],
           authNeededCallback: async () => {
-            return {
-              sig: "",
-              derivedVia: "web3.eth.personal.sign",
-              signedMessage: `Authentication at ${Date.now()}`,
-              address: newPKP.ethAddress,
-            };
+            throw new Error('Session expired. Please re-authenticate.');
           },
         },
       });
       
-      setPKPState(newPKP);
+      // Set all states
       setAuthMethod(newAuthMethod);
+      setPKPState(newPKP);
       setSessionSigsState(sessionSigsResult);
       setIsAuthenticated(true);
       setPendingPkpSelection(false);
@@ -156,9 +152,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentAuthMethodForPkpSelection(null);
       setNeedsToCreateAccount(false);
       
+      // Store auth method and PKP in localStorage (persistent)
       localStorage.setItem('lit-auth-method', JSON.stringify(newAuthMethod));
       localStorage.setItem('lit-pkp', JSON.stringify(newPKP));
-      localStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigsResult));
+      localStorage.setItem('lit-session', 'true');
+      
+      // Store session sigs in sessionStorage (cleared on tab close)
+      sessionStorage.setItem('lit-session-sigs', JSON.stringify(sessionSigsResult)); // Changed to sessionStorage
 
       if (shouldRedirect) {
         router.push('/space');
@@ -172,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [router]);
 
   // Set PKP (handles selection from multiple PKPs)
   const setPKP = useCallback(async (selectedPkp: IRelayPKP) => {
@@ -314,12 +314,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [updateSession]);
 
   // Login with Ethereum Wallet
-  const loginWithEthWallet = useCallback(async () => {
+  const loginWithEthWallet = useCallback(async (address?: string, signMessage?: (message: string) => Promise<string>) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const result = await authenticateWithEthWallet();
+      const result = await authenticateWithEthWallet(address, signMessage);
       const pkps = await getPKPs(result);
       
       if (!pkps || pkps.length === 0) {
@@ -420,7 +420,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     localStorage.removeItem('lit-auth-method');
     localStorage.removeItem('lit-pkp');
-    localStorage.removeItem('lit-session-sigs');
+    localStorage.removeItem('lit-session');
+    sessionStorage.removeItem('lit-session-sigs'); // Changed to sessionStorage
 
     router.push('/');
   }, [router]);
