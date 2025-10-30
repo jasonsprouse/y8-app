@@ -62,7 +62,7 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
         }
       })();
     }
-  }, [isConnected, activeConnector, address, loginWithEthWallet, signMessageAsync, isAuthenticating]);
+  }, [isConnected, activeConnector, address, loginWithEthWallet, signMessageAsync]);
 
   // Reset authentication flag when wallet disconnects
   useEffect(() => {
