@@ -91,7 +91,7 @@ const AuthMethods = ({
         <button
           type="button"
           className="btn btn--outline"
-          onClick={() => setView('wallet')}
+          onClick={() => authenticateWithEthWallet()}
         >
           <div className="btn__icon">
             <svg
