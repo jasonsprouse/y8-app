@@ -282,7 +282,6 @@ import {
   ): Promise<AuthMethod> {
     const provider = getEthWalletProvider();
     
-    console.log('🔐 Authenticating with wallet, ORIGIN:', ORIGIN); // <-- Add this to debug
     
     return provider.authenticate({
       address,
