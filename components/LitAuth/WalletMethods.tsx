@@ -62,7 +62,7 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
         }
       })();
     }
-  }, [isConnected, activeConnector, address, loginWithEthWallet, signMessageAsync]);
+  }, [isConnected, activeConnector, address, loginWithEthWallet, signMessageAsync, isAuthenticating]);
 
   // Reset authentication flag when wallet disconnects
   useEffect(() => {
@@ -83,19 +83,8 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
         return;
       }
 
-      console.log('🔄 Starting Lit Protocol authentication...');
-      
-      const signMessage = async (message: string) => {
-        const sig = await signMessageAsync({ 
-          message,
-          account: address
-        });
-        return sig;
-      };
-      
-      // Call AuthContext's loginWithEthWallet with address and signMessage
-      await loginWithEthWallet(address, signMessage);
-      console.log('✅ Successfully authenticated with Lit Protocol');
+      console.log('🔄 Opening Web3Modal for wallet connection...');
+      await web3ModalOpen({ view: 'Connect' });
       
       // Note: Authentication will happen automatically in the useEffect above
       // when the wallet connects and address becomes available
