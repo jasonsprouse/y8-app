@@ -54,7 +54,6 @@ import {
     return `http://${host}:3000`;
   })();
   
-  console.log('🔧 Lit Protocol ORIGIN:', ORIGIN); // <-- Add this to debug
   
   export const SELECTED_LIT_NETWORK = 
     (process.env.NEXT_PUBLIC_LIT_NETWORK as LIT_NETWORKS_KEYS) || 
