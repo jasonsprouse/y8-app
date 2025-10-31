@@ -53,7 +53,7 @@ const queryClient = new QueryClient({
 // Without projectId, only injected wallets (MetaMask, etc.) will work
 createWeb3Modal({
   wagmiConfig,
-  projectId: projectId || undefined, // Pass undefined when projectId is empty
+  projectId, // Required for WalletConnect; undefined falls back to injected wallets only
 })
 
 export default function Providers({ children }: { children: React.ReactNode }) {
