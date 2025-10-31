@@ -2,7 +2,7 @@ import { createConfig, http } from 'wagmi';
 import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
 import { walletConnect, injected, coinbaseWallet, metaMask } from 'wagmi/connectors';
 
-export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
+export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || undefined;
 
 if (!projectId) {
   console.warn('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set');
