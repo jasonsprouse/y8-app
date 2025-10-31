@@ -32,11 +32,11 @@
 
 "use client";
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createWeb3Modal } from '@web3modal/wagmi/react';
-import { wagmiConfig, chains, projectId } from '../config/wagmi';
+import { wagmiConfig, projectId } from '../config/wagmi';
 import { AuthProvider } from '../context/AuthContext';
 
 const queryClient = new QueryClient({
@@ -45,16 +45,20 @@ const queryClient = new QueryClient({
   },
 });
 
-export default function Providers({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      createWeb3Modal({
-        wagmiConfig,
-        projectId,
-      });
-    }
-  }, []);
+// Initialize Web3Modal at module level so it's available before any components mount
+// This is critical for production builds where timing matters
+// The window check is necessary because this module is evaluated during Next.js build (SSR)
+// even though it's marked as "use client"
+// We always initialize the modal, even without projectId, to ensure hooks work properly
+// Without projectId, it will only support injected wallets (MetaMask, etc.)
+if (typeof window !== 'undefined') {
+  createWeb3Modal({
+    wagmiConfig,
+    projectId: projectId ? projectId : undefined, // Pass undefined when projectId is empty
+  });
+}
 
+export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
