@@ -47,6 +47,8 @@ const queryClient = new QueryClient({
 
 // Initialize Web3Modal at module level so it's available before any components mount
 // This is critical for production builds where timing matters
+// The window check is necessary because this module is evaluated during Next.js build (SSR)
+// even though it's marked as "use client"
 if (typeof window !== 'undefined' && projectId) {
   createWeb3Modal({
     wagmiConfig,
