@@ -54,7 +54,7 @@ const queryClient = new QueryClient({
 if (typeof window !== 'undefined') {
   createWeb3Modal({
     wagmiConfig,
-    projectId: projectId || undefined, // Pass undefined instead of empty string
+    projectId: projectId ? projectId : undefined, // Pass undefined when projectId is empty
   });
 }
 
