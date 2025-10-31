@@ -24,8 +24,8 @@ export const chains = [mainnet, polygon, optimism, arbitrum] as const;
 export const wagmiConfig = createConfig({
   chains,
   connectors: [
-    // Only include WalletConnect if projectId is set
-    ...(projectId ? [walletConnect({ 
+    // Only include WalletConnect connector if projectId is a non-empty string
+    ...(projectId !== '' ? [walletConnect({ 
       projectId,
       metadata,
       showQrModal: false,

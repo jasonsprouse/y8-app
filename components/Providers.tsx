@@ -49,7 +49,8 @@ const queryClient = new QueryClient({
 // Even with "use client", module-level code can execute during Next.js build (SSG)
 // The window check ensures Web3Modal initializes only in the actual browser environment
 // This is critical for production builds to set x-project-id header correctly
-if (typeof window !== 'undefined' && projectId) {
+// Only initialize if projectId is a non-empty string (required for WalletConnect API)
+if (typeof window !== 'undefined' && projectId !== '') {
   createWeb3Modal({
     wagmiConfig,
     projectId, // Must be non-empty string for WalletConnect API to work
