@@ -8,6 +8,7 @@ if (!projectId) {
   console.warn('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set');
 }
 
+
 export const metadata = {
   name: 'Y8 App',
   description: 'Premier lifestyle services for everyone.',
@@ -39,5 +40,6 @@ export const wagmiConfig = createConfig({
     [optimism.id]: http(),
     [arbitrum.id]: http(),
   },
-  ssr: true,
+  ssr: false,
+  syncConnectedChain: true
 });
