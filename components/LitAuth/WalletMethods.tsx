@@ -74,9 +74,32 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
 
   if (!isMounted) return null;
 
-  // Handler to open Web3Modal with Connect view and trigger authentication
+  // Handler to authenticate with wallet (skips modal if already connected)
   const handleWeb3ModalConnect = async () => {
     try {
+      // If wallet is already connected, authenticate directly without opening modal
+      if (isConnected && address && !isAuthenticating && !authenticationAttempted.current) {
+        authenticationAttempted.current = true;
+        setIsAuthenticating(true);
+        
+        console.log('🔄 Starting Lit Protocol authentication...');
+        
+        const signMessage = async (message: string) => {
+          const sig = await signMessageAsync({ 
+            message,
+            account: address
+          });
+          return sig;
+        };
+        
+        // Call AuthContext's loginWithEthWallet with address and signMessage
+        await loginWithEthWallet(address, signMessage);
+        console.log('✅ Successfully authenticated with Lit Protocol');
+        setIsAuthenticating(false);
+        return;
+      }
+
+      // If wallet is not connected, open Web3Modal to connect first
       if (!web3ModalOpen) {
         console.error('Web3Modal is not available. Please set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID environment variable.');
         alert('Web3Modal is not configured. Please use one of the direct wallet connection options below.');
@@ -90,7 +113,9 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
       // when the wallet connects and address becomes available
       
     } catch (error) {
-      console.error('❌ Error opening Web3Modal:', error);
+      console.error('❌ Error with wallet connection:', error);
+      authenticationAttempted.current = false;
+      setIsAuthenticating(false);
     }
   };
 
