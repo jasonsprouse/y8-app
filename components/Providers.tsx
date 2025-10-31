@@ -45,16 +45,16 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize Web3Modal at module level so it's available before any components mount
-// This is critical for production builds where timing matters
-// With "use client" directive, this code only runs on the client side, so no window check needed
-// We always initialize the modal to ensure hooks work properly
-// The projectId is required for WalletConnect and Web3Modal API features
-// Without projectId, only injected wallets (MetaMask, etc.) will work
-createWeb3Modal({
-  wagmiConfig,
-  projectId, // Required for WalletConnect; undefined falls back to injected wallets only
-})
+// Initialize Web3Modal at module level, but ONLY in browser environment
+// Even with "use client", module-level code can execute during Next.js build (SSG)
+// The window check ensures Web3Modal initializes only in the actual browser environment
+// This is critical for production builds to set x-project-id header correctly
+if (typeof window !== 'undefined' && projectId) {
+  createWeb3Modal({
+    wagmiConfig,
+    projectId, // Must be non-empty string for WalletConnect API to work
+  });
+}
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (

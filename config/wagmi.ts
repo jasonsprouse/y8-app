@@ -2,10 +2,12 @@ import { createConfig, http } from 'wagmi';
 import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
 import { walletConnect, injected, coinbaseWallet, metaMask } from 'wagmi/connectors';
 
-export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || undefined;
+// projectId must be a string, not undefined, for Web3Modal to work correctly
+// When undefined is passed to createWeb3Modal, it doesn't set the x-project-id header
+export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
 
 if (!projectId) {
-  console.warn('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set');
+  console.warn('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set. Web3Modal features will be limited.');
 }
 
 
@@ -22,11 +24,12 @@ export const chains = [mainnet, polygon, optimism, arbitrum] as const;
 export const wagmiConfig = createConfig({
   chains,
   connectors: [
-    walletConnect({ 
+    // Only include WalletConnect if projectId is set
+    ...(projectId ? [walletConnect({ 
       projectId,
       metadata,
       showQrModal: false,
-    }),
+    })] : []),
     injected({ shimDisconnect: true }),
     metaMask(),
     coinbaseWallet({
