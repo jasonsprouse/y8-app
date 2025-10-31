@@ -36,7 +36,7 @@ import React from 'react';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createWeb3Modal } from '@web3modal/wagmi/react';
-import { wagmiConfig, chains, projectId } from '../config/wagmi';
+import { wagmiConfig, projectId } from '../config/wagmi';
 import { AuthProvider } from '../context/AuthContext';
 
 const queryClient = new QueryClient({
@@ -49,10 +49,12 @@ const queryClient = new QueryClient({
 // This is critical for production builds where timing matters
 // The window check is necessary because this module is evaluated during Next.js build (SSR)
 // even though it's marked as "use client"
-if (typeof window !== 'undefined' && projectId) {
+// We always initialize the modal, even without projectId, to ensure hooks work properly
+// Without projectId, it will only support injected wallets (MetaMask, etc.)
+if (typeof window !== 'undefined') {
   createWeb3Modal({
     wagmiConfig,
-    projectId,
+    projectId: projectId || undefined, // Pass undefined instead of empty string
   });
 }
 
