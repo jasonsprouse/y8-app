@@ -92,10 +92,16 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
           return sig;
         };
         
-        // Call AuthContext's loginWithEthWallet with address and signMessage
-        await loginWithEthWallet(address, signMessage);
-        console.log('✅ Successfully authenticated with Lit Protocol');
-        setIsAuthenticating(false);
+        try {
+          // Call AuthContext's loginWithEthWallet with address and signMessage
+          await loginWithEthWallet(address, signMessage);
+          console.log('✅ Successfully authenticated with Lit Protocol');
+        } catch (error) {
+          console.error('❌ Error during Lit Protocol authentication:', error);
+          authenticationAttempted.current = false;
+        } finally {
+          setIsAuthenticating(false);
+        }
         return;
       }
 
