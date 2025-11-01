@@ -45,14 +45,23 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize Web3Modal at module level to ensure it's created once before any component renders
-// This ensures the projectId is properly configured before any Web3Modal hooks are used
-// Only initialize on the client side to avoid SSR issues
+// Lazy initialization: ensures Web3Modal is created exactly once on client side
+let web3ModalInitialized = false;
+
+function initializeWeb3Modal() {
+  if (!web3ModalInitialized && typeof window !== 'undefined') {
+    createWeb3Modal({
+      wagmiConfig,
+      projectId,
+    });
+    web3ModalInitialized = true;
+  }
+}
+
+// Initialize on module load for client-side only
+// This ensures the modal is ready before any component renders and uses Web3Modal hooks
 if (typeof window !== 'undefined') {
-  createWeb3Modal({
-    wagmiConfig,
-    projectId,
-  });
+  initializeWeb3Modal();
 }
 
 export default function Providers({ children }: { children: React.ReactNode }) {
