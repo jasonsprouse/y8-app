@@ -32,7 +32,7 @@
 
 "use client";
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createWeb3Modal } from '@web3modal/wagmi/react';
@@ -45,16 +45,17 @@ const queryClient = new QueryClient({
   },
 });
 
-export default function Providers({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      createWeb3Modal({
-        wagmiConfig,
-        projectId,
-      });
-    }
-  }, []);
+// Initialize Web3Modal at module level to ensure it's created once before any component renders
+// This ensures the projectId is properly configured before any Web3Modal hooks are used
+// Only initialize on the client side to avoid SSR issues
+if (typeof window !== 'undefined') {
+  createWeb3Modal({
+    wagmiConfig,
+    projectId,
+  });
+}
 
+export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
