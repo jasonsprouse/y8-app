@@ -20,7 +20,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined' && !appKitInitialized.current) {
       createAppKit({
         adapters: [wagmiAdapter],
-        networks,
+        networks: [...networks],
         projectId,
         metadata,
         themeMode: 'dark',
