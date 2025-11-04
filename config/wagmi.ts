@@ -1,6 +1,5 @@
-import { createConfig, http } from 'wagmi';
-import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
-import { walletConnect, injected, coinbaseWallet, metaMask } from 'wagmi/connectors';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import { mainnet, polygon, arbitrum, optimism, base, AppKitNetwork } from '@reown/appkit/networks';
 
 export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
 
@@ -15,29 +14,16 @@ export const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/37784886'],
 };
 
-// Directly define chains array as a tuple
-export const chains = [mainnet, polygon, optimism, arbitrum] as const;
+// All networks
+export const networks = [mainnet, polygon, arbitrum, optimism, base] as [
+  AppKitNetwork,
+  ...AppKitNetwork[],
+];
 
-export const wagmiConfig = createConfig({
-  chains,
-  connectors: [
-    walletConnect({ 
-      projectId,
-      metadata,
-      showQrModal: false,
-    }),
-    injected({ shimDisconnect: true }),
-    metaMask(),
-    coinbaseWallet({
-      appName: metadata.name,
-      appLogoUrl: metadata.icons[0],
-    }),
-  ],
-  transports: {
-    [mainnet.id]: http(),
-    [polygon.id]: http(),
-    [optimism.id]: http(),
-    [arbitrum.id]: http(),
-  },
-  ssr: true,
+// Single unified wagmi configuration using WagmiAdapter
+export const wagmiAdapter = new WagmiAdapter({
+  projectId,
+  networks,
 });
+
+export const wagmiConfig = wagmiAdapter.wagmiConfig;
