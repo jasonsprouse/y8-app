@@ -15,8 +15,10 @@ export const metadata = {
 };
 
 // All networks
-export const networks = [mainnet, polygon, arbitrum, optimism, base] as AppKitNetwork[];
-
+export const networks = [mainnet, polygon, arbitrum, optimism, base] as [
+  AppKitNetwork,
+  ...AppKitNetwork[],
+];
 // Single unified wagmi configuration using WagmiAdapter
 export const wagmiAdapter = new WagmiAdapter({
   projectId,
