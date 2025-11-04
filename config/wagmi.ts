@@ -1,6 +1,7 @@
 import { createConfig, http } from 'wagmi';
-import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
+import { mainnet, polygon, optimism, arbitrum, base } from 'wagmi/chains';
 import { walletConnect, injected, coinbaseWallet, metaMask } from 'wagmi/connectors';
+import type { Chain } from 'viem';
 
 export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
 
@@ -14,6 +15,15 @@ export const metadata = {
   url: typeof window !== 'undefined' ? window.location.origin : `https://${process.env.NEXT_PUBLIC_DOMAIN ?? 'localhost:3000'}`,
   icons: ['https://avatars.githubusercontent.com/u/37784886'],
 };
+
+// Type alias for AppKit network
+export type AppKitNetwork = Chain;
+
+// Export networks array with tuple type assertion
+export const networks = [mainnet, polygon, arbitrum, optimism, base] as [
+  AppKitNetwork,
+  ...AppKitNetwork[],
+];
 
 // Directly define chains array as a tuple
 export const chains = [mainnet, polygon, optimism, arbitrum] as const;
