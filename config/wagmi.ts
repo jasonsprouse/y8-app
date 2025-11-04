@@ -16,10 +16,17 @@ export const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/37784886'],
 };
 
-// Type alias for AppKit network
+/**
+ * Type alias for AppKit network configuration.
+ * Used for type-safe network definitions with @web3modal/wagmi (Reown AppKit).
+ */
 export type AppKitNetwork = Chain;
 
-// Export networks array with tuple type assertion
+/**
+ * Networks supported by AppKit (Web3Modal).
+ * Exported as a tuple with at least one network to ensure type safety.
+ * This array includes additional networks (like base) that may not be in the wagmiConfig chains.
+ */
 export const networks = [mainnet, polygon, arbitrum, optimism, base] as [
   AppKitNetwork,
   ...AppKitNetwork[],
