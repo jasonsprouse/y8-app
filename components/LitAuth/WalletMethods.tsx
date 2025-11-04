@@ -1,10 +1,9 @@
 "use client";
 
-import { useConnect, useAccount, useDisconnect, useSignMessage } from 'wagmi';
+import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
 import { useIsMounted } from '../../hooks/useIsMounted';
-import { useWeb3Modal, useWeb3ModalState, useWalletInfo } from '@web3modal/wagmi/react';
+import { useAppKit, useAppKitState } from '@reown/appkit/react';
 import { useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { useAuth } from '../../context/AuthContext';
 import type { AuthView } from '../../types/AuthView';
 
@@ -16,17 +15,15 @@ interface WalletMethodsProps {
 
 const WalletMethods = ({ setView }: WalletMethodsProps) => {
   const isMounted = useIsMounted();
-  const { connectors, connect } = useConnect();
   const { isConnected, connector: activeConnector, address } = useAccount();
   const { disconnect } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
   const { loginWithEthWallet } = useAuth(); // Use AuthContext
   
-  // Use all available Web3Modal hooks for full compliance
+  // Use all available AppKit hooks for full compliance
   // Hooks must be called unconditionally at the top level
-  const { open: web3ModalOpen, close: web3ModalClose } = useWeb3Modal();
-  const modalState = useWeb3ModalState();
-  const walletInfo = useWalletInfo();
+  const { open: appKitOpen, close: appKitClose } = useAppKit();
+  const modalState = useAppKitState();
   
   const authenticationAttempted = useRef(false);
 
@@ -60,38 +57,38 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
 
   if (!isMounted) return null;
 
-  // Handler to open Web3Modal with Connect view
-  const handleWeb3ModalConnect = async () => {
-    if (web3ModalOpen) {
-      await web3ModalOpen({ view: 'Connect' });
+  // Handler to open AppKit with Connect view
+  const handleAppKitConnect = async () => {
+    if (appKitOpen) {
+      await appKitOpen({ view: 'Connect' });
     } else {
-      console.error('Web3Modal is not available. Please set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID environment variable.');
-      alert('Web3Modal is not configured. Please use one of the direct wallet connection options below.');
+      console.error('AppKit is not available. Please set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID environment variable.');
+      alert('AppKit is not configured. Please use one of the direct wallet connection options below.');
     }
   };
 
-  // Handler to open Web3Modal with Account view
-  const handleWeb3ModalAccount = async () => {
-    if (web3ModalOpen) {
-      await web3ModalOpen({ view: 'Account' });
+  // Handler to open AppKit with Account view
+  const handleAppKitAccount = async () => {
+    if (appKitOpen) {
+      await appKitOpen({ view: 'Account' });
     } else {
-      console.error('Web3Modal is not available.');
+      console.error('AppKit is not available.');
     }
   };
 
-  // Handler to open Web3Modal with Networks view
-  const handleWeb3ModalNetworks = async () => {
-    if (web3ModalOpen) {
-      await web3ModalOpen({ view: 'Networks' });
+  // Handler to open AppKit with Networks view
+  const handleAppKitNetworks = async () => {
+    if (appKitOpen) {
+      await appKitOpen({ view: 'Networks' });
     } else {
-      console.error('Web3Modal is not available.');
+      console.error('AppKit is not available.');
     }
   };
 
-  // Handler to close Web3Modal
-  const handleWeb3ModalClose = async () => {
-    if (web3ModalClose) {
-      await web3ModalClose();
+  // Handler to close AppKit
+  const handleAppKitClose = async () => {
+    if (appKitClose) {
+      await appKitClose();
     }
   };
 
@@ -99,8 +96,8 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
   const handleDisconnect = async () => {
     disconnect();
     // Close modal if open
-    if (modalState.open && web3ModalClose) {
-      await web3ModalClose();
+    if (modalState.open && appKitClose) {
+      await appKitClose();
     }
   };
 
@@ -125,11 +122,6 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
           <p style={{ marginBottom: '0.5rem' }}>
             <strong>Address:</strong> {address.slice(0, 6)}...{address.slice(-4)}
           </p>
-          {walletInfo.walletInfo && (
-            <p style={{ marginBottom: '0.5rem' }}>
-              <strong>Wallet:</strong> {walletInfo.walletInfo.name || 'Unknown'}
-            </p>
-          )}
           {activeConnector && (
             <p style={{ marginBottom: 0 }}>
               <strong>Connector:</strong> {activeConnector.name}
@@ -139,12 +131,12 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
       )}
 
       <div className="buttons-container">
-        {/* Web3Modal Connect Button - Primary method for connecting */}
+        {/* AppKit Connect Button - Primary method for connecting */}
         {!isConnected && (
           <button
             type="button"
             className="btn btn--primary"
-            onClick={handleWeb3ModalConnect}
+            onClick={handleAppKitConnect}
           >
             <div className="btn__icon">
               <svg
@@ -165,12 +157,12 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
           </button>
         )}
 
-        {/* Web3Modal Account Button - Opens account view when connected */}
+        {/* AppKit Account Button - Opens account view when connected */}
         {isConnected && (
           <button
             type="button"
             className="btn btn--primary"
-            onClick={handleWeb3ModalAccount}
+            onClick={handleAppKitAccount}
           >
             <div className="btn__icon">
               <svg
@@ -191,12 +183,12 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
           </button>
         )}
 
-        {/* Web3Modal Networks Button - Opens network selection */}
+        {/* AppKit Networks Button - Opens network selection */}
         {isConnected && (
           <button
             type="button"
             className="btn btn--outline"
-            onClick={handleWeb3ModalNetworks}
+            onClick={handleAppKitNetworks}
           >
             <div className="btn__icon">
               <svg
@@ -243,12 +235,12 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
           </button>
         )}
 
-        {/* Close Modal Button - Closes Web3Modal if it's open */}
+        {/* Close Modal Button - Closes AppKit if it's open */}
         {modalState.open && (
           <button
             type="button"
             className="btn btn--outline"
-            onClick={handleWeb3ModalClose}
+            onClick={handleAppKitClose}
           >
             <div className="btn__icon">
               <svg
@@ -269,37 +261,6 @@ const WalletMethods = ({ setView }: WalletMethodsProps) => {
           </button>
         )}
 
-        {/* Fallback direct connector buttons - shown when not connected */}
-        {!isConnected && connectors.map(connector => (
-          <button
-            type="button"
-            className="btn btn--outline"
-            disabled={!connector.ready}
-            key={connector.id}
-            onClick={() => connect({ connector })}
-          >
-            {connector.name.toLowerCase() === 'metamask' && (
-              <div className="btn__icon">
-                <Image
-                  src="/metamask.png"
-                  alt="MetaMask logo"
-                  fill={true}
-                ></Image>
-              </div>
-            )}
-            {connector.name.toLowerCase() === 'coinbase wallet' && (
-              <div className="btn__icon">
-                <Image
-                  src="/coinbase.png"
-                  alt="Coinbase logo"
-                  fill={true}
-                ></Image>
-              </div>
-            )}
-            <span className="btn__label">Continue with {connector.name}</span>
-          </button>
-        ))}
-        
         <button onClick={() => setView('login')} className="btn btn--link">
           Back
         </button>
