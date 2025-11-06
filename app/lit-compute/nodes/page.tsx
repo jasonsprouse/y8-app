@@ -3,14 +3,10 @@
  * Full interface for users to manage their compute nodes
  */
 
-import { Metadata } from 'next';
+'use client';
+
 import NodeDashboard from '@/components/LitCompute/NodeDashboard';
 import Link from 'next/link';
-
-export const metadata: Metadata = {
-  title: 'Node Dashboard | Lit Compute Network',
-  description: 'Manage your compute node and monitor earnings',
-};
 
 export default function NodesPage() {
   // TODO: Get actual user data from auth context

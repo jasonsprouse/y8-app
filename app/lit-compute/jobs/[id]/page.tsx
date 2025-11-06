@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 };
 
 interface JobDetailsPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // This would fetch real data from API in production
@@ -41,7 +41,8 @@ async function getJobData(jobId: string) {
 }
 
 export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
-  const job = await getJobData(params.id);
+  const { id } = await params;
+  const job = await getJobData(id);
 
   const getStatusBadge = (status: string) => {
     const styles = {

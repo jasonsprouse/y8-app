@@ -3,16 +3,12 @@
  * Personalized dashboard showing user's jobs, earnings, and quick actions
  */
 
-import { Metadata } from 'next';
+'use client';
+
 import JobList from '@/components/LitCompute/JobList';
 import PaymentHistory from '@/components/LitCompute/PaymentHistory';
 import SystemStatsDashboard from '@/components/LitCompute/SystemStatsDashboard';
 import Link from 'next/link';
-
-export const metadata: Metadata = {
-  title: 'Dashboard | Lit Compute Network',
-  description: 'Manage your Lit Compute jobs and earnings',
-};
 
 export default function LitComputeDashboardPage() {
   // TODO: Get actual user ID from auth context
