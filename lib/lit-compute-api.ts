@@ -183,6 +183,150 @@ export class LitComputeAPI {
 
     return response.json();
   }
+
+  /**
+   * Get node earnings data
+   */
+  async getNodeEarnings(nodeId: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/lit-compute/nodes/${nodeId}/earnings`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to get node earnings: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get active jobs by node
+   */
+  async getActiveJobsByNode(nodeId: string): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/lit-compute/nodes/${nodeId}/active-jobs`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to get active jobs: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.jobs || [];
+  }
+
+  /**
+   * Get node performance metrics
+   */
+  async getNodeMetrics(nodeId: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/lit-compute/nodes/${nodeId}/metrics`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to get node metrics: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Withdraw node earnings
+   */
+  async withdrawEarnings(nodeId: string, wallet: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/lit-compute/nodes/${nodeId}/withdraw`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to withdraw earnings: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get node transactions
+   */
+  async getNodeTransactions(nodeId: string): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/lit-compute/nodes/${nodeId}/transactions`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to get node transactions: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.transactions || [];
+  }
+
+  /**
+   * Get user transactions
+   */
+  async getUserTransactions(userId: string): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/lit-compute/users/${userId}/transactions`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to get user transactions: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.transactions || [];
+  }
+
+  /**
+   * Get all jobs (with optional filters)
+   */
+  async getAllJobs(): Promise<LitComputeJob[]> {
+    const response = await fetch(`${this.baseUrl}/lit-compute/jobs/all`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to get all jobs: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.jobs || [];
+  }
+
+  /**
+   * Get jobs by user
+   */
+  async getJobsByUser(userId: string): Promise<LitComputeJob[]> {
+    const response = await fetch(`${this.baseUrl}/lit-compute/users/${userId}/jobs`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to get user jobs: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.jobs || [];
+  }
+
+  /**
+   * Get jobs by node
+   */
+  async getJobsByNode(nodeId: string): Promise<LitComputeJob[]> {
+    const response = await fetch(`${this.baseUrl}/lit-compute/nodes/${nodeId}/jobs/all`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to get node jobs: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.jobs || [];
+  }
+
+  /**
+   * Get node by wallet address
+   */
+  async getNodeByWallet(wallet: string): Promise<NodeStatus | null> {
+    const response = await fetch(`${this.baseUrl}/lit-compute/nodes/by-wallet/${wallet}`);
+
+    if (response.status === 404) {
+      return null; // No node registered
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to get node by wallet: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
 }
 
 // Export singleton instance
