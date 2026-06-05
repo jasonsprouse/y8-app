@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 /**
  * BiometricWalletButton
  * 
- * Initiates connection via Coinbase Smart Wallet with Passkey (Face ID) flow.
+ * Initiates connection via Coinbase Smart Wallet with Passkey (Fingerprint) flow.
  * Uses Account Abstraction (ERC-4337) for sponsored transactions on Base.
  * The Coinbase Smart Wallet automatically sponsors the deployment gas via Paymaster.
  */
@@ -60,7 +60,7 @@ export default function BiometricWalletButton() {
       disabled={isLoading}
       className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors duration-200"
     >
-      {isLoading ? 'Connecting...' : '🔐 Connect with Face ID'}
+      {isLoading ? 'Connecting...' : '� Connect with Fingerprint'}
     </button>
   );
 }
