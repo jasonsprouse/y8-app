@@ -7,6 +7,9 @@ import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
 import styles from '../../styles/Space.module.css';
 
+// Mark as dynamic to prevent static prerendering
+export const dynamic = 'force-dynamic';
+
 export default function SpaceServicesPage() {
   const { isAuthenticated } = useAuth();
   const [activeService, setActiveService] = useState(0);

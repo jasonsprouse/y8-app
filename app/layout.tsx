@@ -8,6 +8,9 @@ import NotificationBar from '../components/ui/NotificationBar';
 import RouteGuard from '../components/RouteGuard';
 import '../styles/globals.css';
 
+// Mark as dynamic to prevent static prerendering
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: {
     default: 'Home | Y8',

@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
-import NpeManager from '../../components/NpeManager';
+
+// Mark as dynamic to prevent static prerendering
+export const dynamic = 'force-dynamic';
 
 const ShopPage = () => {
   const [activeTab, setActiveTab] = useState('digital');
@@ -30,7 +32,7 @@ const ShopPage = () => {
         </button>
       </div>
       <div className="py-4">
-        {activeTab === 'digital' && <NpeManager />}
+        {activeTab === 'digital' && <div>Coming soon: Digital marketplace.</div>}
         {activeTab === 'physical' && <div>Coming soon: A marketplace for physical goods.</div>}
         {activeTab === 'labor' && <div>Coming soon: A marketplace for labor and services.</div>}
       </div>
