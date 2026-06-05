@@ -25,7 +25,7 @@ const queryClient = new QueryClient({
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
+    <SessionProvider session={null} refetchInterval={0}>
       <WagmiProvider config={wagmiConfig}>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>{children}</AuthProvider>

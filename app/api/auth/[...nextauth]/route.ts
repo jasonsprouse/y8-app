@@ -3,6 +3,9 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { SiweMessage } from 'siwe';
 import type { AuthOptions } from 'next-auth';
 
+// Prevent static generation of dynamic route
+export const dynamic = 'force-dynamic';
+
 /**
  * NextAuth configuration with SIWE (Sign In With Ethereum)
  * 
