@@ -1,11 +1,21 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import { SessionProvider } from 'next-auth/react';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createAppKit } from '@reown/appkit/react';
-import { wagmiAdapter, wagmiConfig, networks, projectId, metadata } from '../config/wagmi';
+import { wagmiConfig } from '../config/wagmi';
 import { AuthProvider } from '../context/AuthContext';
+
+/**
+ * Providers - Root provider hierarchy for Web3 and authentication
+ * 
+ * Provider stack:
+ * 1. SessionProvider - NextAuth session management (required for useSession hook)
+ * 2. WagmiProvider - Wallet state management (Coinbase Smart Wallet)
+ * 3. QueryClientProvider - React Query for async state
+ * 4. AuthProvider - Custom auth context wrapper for SIWE authentication
+ */
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,26 +24,13 @@ const queryClient = new QueryClient({
 });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  const appKitInitialized = useRef(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !appKitInitialized.current) {
-      createAppKit({
-        adapters: [wagmiAdapter],
-        networks: [...networks],
-        projectId,
-        metadata,
-        themeMode: 'dark',
-      });
-      appKitInitialized.current = true;
-    }
-  }, []);
-
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>{children}</AuthProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <SessionProvider session={null} refetchInterval={0}>
+      <WagmiProvider config={wagmiConfig}>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>{children}</AuthProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </SessionProvider>
   );
 }

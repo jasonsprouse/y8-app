@@ -1,33 +1,22 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import LoginMethods from './LitAuth/LoginMethods';
-import SignUpMethods from './LitAuth/SignUpMethods';
-import WebAuthn from './LitAuth/WebAuthn';
-import StytchOTP from './LitAuth/StytchOTP';
-import WalletMethods from './LitAuth/WalletMethods';
-import AccountSelection from './LitAuth/AccountSelection';
-import CreateAccount from './LitAuth/CreateAccount';
-import Loading from './LitAuth/Loading';
-import styles from '../styles/AuthLogin.module.css';
-import type { AuthView } from '../types/AuthView';
+import BiometricWalletButton from './BiometricWalletButton';
 
+/**
+ * AuthLogin - Deprecated component maintained for backward compatibility
+ * 
+ * Now displays a deprecation message directing users to the /auth page
+ * where Coinbase Smart Wallet authentication is available.
+ */
 export default function AuthLogin() {
-  const { 
-    isLoading,
-    loginWithGoogle, 
-    loginWithDiscord, 
-    loginWithEthWallet, 
-    loginWithWebAuthn, 
-    loginWithStytchOtp,
-    registerWebAuthn,
-    availablePkps,
-    pendingPkpSelection,
-    setPKP,
-    needsToCreateAccount,
-    clearNeedsToCreateAccount,
-    error 
+  return (
+    <div style={{ textAlign: 'center', padding: '2rem' }}>
+      <h2>Authentication</h2>
+      <p>Please use the authentication page to log in.</p>
+      <BiometricWalletButton />
+    </div>
+  );
+} 
   } = useAuth();
   
   const [authView, setAuthView] = useState<AuthView>('login');

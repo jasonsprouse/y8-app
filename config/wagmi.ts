@@ -1,11 +1,31 @@
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { mainnet, polygon, arbitrum, optimism, base, AppKitNetwork } from '@reown/appkit/networks';
+import { createConfig, http } from 'wagmi';
+import { base, mainnet, polygon, arbitrum, optimism } from 'viem/chains';
+import { coinbaseWallet } from 'wagmi/connectors';
 
-export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
+/**
+ * Wagmi Configuration
+ * 
+ * Simplified configuration using Coinbase Smart Wallet connector.
+ * Removed Reown AppKit as it had version conflicts with wagmi 2.18.1.
+ */
 
-if (!projectId) {
-  console.warn('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set');
-}
+const chains = [base, mainnet, polygon, arbitrum, optimism] as const;
+
+export const wagmiConfig = createConfig({
+  chains,
+  connectors: [
+    coinbaseWallet({
+      appName: 'Y8 App',
+    }),
+  ],
+  transports: {
+    [base.id]: http(),
+    [mainnet.id]: http(),
+    [polygon.id]: http(),
+    [arbitrum.id]: http(),
+    [optimism.id]: http(),
+  },
+});
 
 export const metadata = {
   name: 'Y8 App',
@@ -13,16 +33,3 @@ export const metadata = {
   url: typeof window !== 'undefined' ? window.location.origin : `https://${process.env.NEXT_PUBLIC_DOMAIN ?? 'localhost:3000'}`,
   icons: ['https://avatars.githubusercontent.com/u/37784886'],
 };
-
-// All networks
-export const networks = [mainnet, polygon, arbitrum, optimism, base] as [
-  AppKitNetwork,
-  ...AppKitNetwork[],
-];
-// Single unified wagmi configuration using WagmiAdapter
-export const wagmiAdapter = new WagmiAdapter({
-  projectId,
-  networks,
-});
-
-export const wagmiConfig = wagmiAdapter.wagmiConfig;
