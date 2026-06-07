@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
 import styles from '../styles/Navbar.module.css';
 
 const navItems = [
@@ -17,6 +18,7 @@ const Navbar = () => {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
 
   // Check if we're on mobile and reset menu state when window is resized
   useEffect(() => {
@@ -43,6 +45,11 @@ const Navbar = () => {
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
+
+  const handleLogout = async () => {
+    setIsOpen(false);
+    await logout();
+  };
 
   return (
     <nav className="slimmenu-container">
@@ -71,6 +78,31 @@ const Navbar = () => {
             </Link>
           );
         })}
+        
+        {/* Show logout button if authenticated */}
+        {isAuthenticated && user && (
+          <div style={{ borderTop: '1px solid #ccc', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
+            <div style={{ fontSize: '0.9rem', color: '#666', paddingBottom: '0.5rem' }}>
+              {user.address.slice(0, 6)}...{user.address.slice(-4)}
+            </div>
+            <button
+              onClick={handleLogout}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                backgroundColor: '#ff4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.9rem',
+                fontWeight: '500'
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </div>
     </nav>
   );

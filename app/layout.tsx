@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Poppins, Inter } from 'next/font/google';
 import Providers from '../components/Providers';
 import Header from '../components/ui/Header';
@@ -22,13 +22,17 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: {
     default: 'Home | Y8',
     template: '%s | Y8',
   },
   description: 'Premier lifestyle services for everyone.',
-  viewport: 'width=device-width, initial-scale=1',
 };
 
 

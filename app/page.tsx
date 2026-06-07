@@ -1,17 +1,25 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
-import AuthLogin from '../components/AuthLogin';
-import Dashboard from '../components/LitAuth/Dashboard';
+import Dashboard from '../components/Dashboard';
 import styles from '../styles/Page.module.css';
 import toast, { Toaster } from 'react-hot-toast';
 
 const notify = (pageName: string) => toast(`You're visiting the ${pageName} page`);
 
 export default function Home() {
-  const { isAuthenticated, isLoading, pkp, sessionSigs, logOut } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const router = useRouter();
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/auth');
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   // Show loading state
   if (isLoading) {
@@ -23,24 +31,16 @@ export default function Home() {
     );
   }
 
-  // Show auth login if not authenticated
+  // Show main content if authenticated
   if (!isAuthenticated) {
-    return (
-      <div className="page-content">
-        <AuthLogin />
-      </div>
-    );
+    return null; // RouteGuard will handle redirect
   }
 
-  // Show main content if authenticated
   return (
     <div className="page-content">
       {/* Use Dashboard component for user info */}
-      {pkp && sessionSigs && (
-        <Dashboard
-          currentAccount={pkp}
-          sessionSigs={sessionSigs}
-        />
+      {user && (
+        <Dashboard />
       )}
 
       {/* Main navigation cards */}

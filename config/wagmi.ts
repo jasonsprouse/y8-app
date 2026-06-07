@@ -1,22 +1,19 @@
-import { createConfig, http } from 'wagmi';
-import { mainnet, polygon, optimism } from 'wagmi/chains';
-import { metaMask, walletConnect, coinbaseWallet, injected } from 'wagmi/connectors';
+import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { mainnet, polygon, optimism, base } from 'wagmi/chains';
+import { http } from 'wagmi';
 
-export const wagmiConfig = createConfig({
-  chains: [mainnet, polygon, optimism],
-  connectors: [
-    metaMask(),
-    walletConnect({
-      projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'your-project-id',
-    }),
-    coinbaseWallet({
-      appName: 'Y8 App',
-    }),
-    injected(),
-  ],
+export const wagmiConfig = getDefaultConfig({
+  appName: 'Y8 App',
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'your-project-id',
+  chains: [mainnet, polygon, optimism, base],
+  ssr: true, // Recommended for Next.js
   transports: {
-    [mainnet.id]: http(),
-    [polygon.id]: http(),
-    [optimism.id]: http(),
+    [mainnet.id]: http('https://cloudflare-eth.com'),
+    [polygon.id]: http('https://polygon-rpc.com'),
+    [optimism.id]: http('https://mainnet.optimism.io'),
+    [base.id]: http('https://base-mainnet.public.blastapi.io'),
+   
+
   },
 });
+

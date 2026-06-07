@@ -1,74 +1,44 @@
 "use client";
 
-import { WagmiProvider, createConfig, http } from 'wagmi';
-import { goerli, mainnet, optimism } from 'wagmi/chains';
-import { coinbaseWallet, metaMask } from 'wagmi/connectors';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Image from 'next/image';
-
-// 1. Initialize a QueryClient
-const queryClient = new QueryClient();
-
-// 2. Define your chains
-const chains = [mainnet, goerli, optimism] as const;
-
-// 3. Create the Wagmi config - RENAMED from 'config' to 'wagmiConfig'
-const wagmiConfig = createConfig({
-  chains: chains,
-  connectors: [
-    metaMask(),
-    coinbaseWallet({
-      appName: 'Y8 App',
-    }),
-  ],
-  transports: {
-    [mainnet.id]: http(),
-    [goerli.id]: http(),
-    [optimism.id]: http(),
-  },
-});
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function AuthPage() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // If user becomes authenticated, redirect them to the home page
+    if (!isLoading && isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <div className="auth-page">
-          <h1>Authenticate</h1>
-          <p>Choose your authentication method</p>
-          <div className="buttons-container">
-            <button type="button" className="btn btn--outline">
-              <div className="btn__icon">
-                <Image
-                  src="/google.png"
-                  alt="Google logo"
-                  fill={true}
-                ></Image>
-              </div>
-              <span className="btn__label">Continue with Google</span>
-            </button>
-            <button type="button" className="btn btn--outline">
-              <div className="btn__icon">
-                <Image
-                  src="/discord.png"
-                  alt="Discord logo"
-                  fill={true}
-                ></Image>
-              </div>
-              <span className="btn__label">Continue with Discord</span>
-            </button>
-            <button type="button" className="btn btn--outline">
-              <div className="btn__icon">
-                <Image
-                  src="/webauthn.png"
-                  alt="WebAuthn logo"
-                  fill={true}
-                ></Image>
-              </div>
-              <span className="btn__label">Continue with WebAuthn</span>
-            </button>
-          </div>
+    <div className="flex flex-col items-center justify-center min-vh-50 py-20">
+      <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg text-center">
+        <h1 className="text-3xl font-bold mb-6 text-gray-800">Authentication Required</h1>
+        <p className="text-gray-600 mb-8">
+          Please connect your wallet and sign the message to access protected features.
+        </p>
+        
+        <div className="flex justify-center">
+          <ConnectButton 
+            label="Sign In with Wallet"
+            showBalance={false}
+            accountStatus="address"
+          />
         </div>
-      </QueryClientProvider>
-    </WagmiProvider>
+
+        <button 
+          onClick={() => router.push('/')}
+          className="mt-8 text-sm text-gray-500 hover:text-blue-600 transition-colors"
+        >
+          ← Back to Home
+        </button>
+      </div>
+    </div>
   );
 }
