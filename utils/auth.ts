@@ -1,5 +1,5 @@
 import NextAuth from 'next-auth';
-import type { NextAuthConfig } from 'next-auth';
+import type { NextAuthOptions } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { SiweMessage } from 'siwe';
 
@@ -9,7 +9,7 @@ declare module "next-auth" {
   }
 }
 
-export const authOptions: NextAuthConfig = {
+export const authOptions: NextAuthOptions = {
   providers: [
     Credentials({
       name: 'Ethereum',
@@ -86,10 +86,8 @@ export const authOptions: NextAuthConfig = {
       return session;
     },
   },
-  pages: {
-    signIn: '/', // Redirect to home for login
-    error: '/', // Redirect errors to home
-  },
+  // pages: {
+  //   signIn: '/', // Redirect to home for login
+  //   error: '/', // Redirect errors to home
+  // },
 };
-
-export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);

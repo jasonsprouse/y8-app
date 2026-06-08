@@ -15,12 +15,7 @@ const queryClient = new QueryClient();
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
-      <SessionProvider 
-        refetchInterval={5 * 60} // Refetch session every 5 minutes
-        refetchOnWindowFocus={true} // Refetch when window regains focus
-        refetchOnReconnect={true} // Refetch when connection is restored
-        session={null}
-      >
+      <SessionProvider refetchInterval={0}>
         <QueryClientProvider client={queryClient}>
           <RainbowKitSiweNextAuthProvider>
             <RainbowKitProvider modalSize="compact">

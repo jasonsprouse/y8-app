@@ -1,5 +1,8 @@
+"use client";
+
 // components/Footer.tsx
 import React from 'react';
+import { signOut } from 'next-auth/react';
 
 const Footer = () => {
   return (
@@ -16,6 +19,12 @@ const Footer = () => {
           support@goodfaith.church
         </a>
       </p>
+      <button 
+        onClick={() => signOut()}
+        style={{ marginTop: '1rem', padding: '0.5rem 1rem', cursor: 'pointer' }}
+      >
+        Log out
+      </button>
     </footer>
   );
 };
